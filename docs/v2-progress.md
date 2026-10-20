@@ -21,7 +21,31 @@ Last updated: day 3 (v2.5 in progress).
 
 ## v2.5 Multi-Tier Storage Engine (In Progress on branch `2.5`)
 
-Goal: Replace `localStorage` string serialization for reading history and bookmarks with an IndexedDB storage engine while preserving zero-latency synchronous UI lookups.
+Goal: Replace `localStorage` string serialization for reading progress and bookmarks with an IndexedDB storage engine while preserving zero-latency synchronous UI lookups.
+
+```
+                      +-----------------------------+
+                      |     KomiK Storage Layer     |
+                      +--------------+--------------+
+                                     |
+         +---------------------------+---------------------------+
+         |                           |                           |
+         v                           v                           v
++------------------+        +------------------+        +------------------+
+|       OPFS       |        |    IndexedDB     |        |   LocalStorage   |
+| (Archive Files)  |        | (Data & Covers)  |        | (Sync App State) |
++------------------+        +------------------+        +------------------+
+| - Raw .cbz/.cbr  |        | - Cover thumbnails|       | - Dark/Light mode|
+|   comic archives |        |   (Blobs for shelf|       |   (instant boot) |
+| - Chunked writes |        | - Reading history |       | - Reader settings|
+|   via Worker     |        |   & active page # |       |   (hairline, curl|
+| - Fast sync access|       | - Bookmarks list  | - Low-power flag |
++------------------+        +------------------+        +------------------+
+         ^                           ^                           ^
+         |                           |                           |
+   Disk (large)                 Async NoSQL                  Instant Key
+   ~GBs capacity               ~GBs capacity                 ~5 MB quota
+```
 
 | Milestone | Status | Notes |
 |---|---|---|

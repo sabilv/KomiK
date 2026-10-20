@@ -151,6 +151,31 @@ reflection     = matrix(1−2nx², −2nxny, −2nxny, 1−2ny², 2(M·n)nx, 2(M
 * `logIssue` keeps the last 20 events (`error`, `unhandledrejection`, `securitypolicyviolation`, library and service worker failures). `copyDiagnostics` reads storage, service worker and cache state at the moment of the request; it never includes book names or file contents.
 
 ### 3.13 Multi-Tier Storage Engine & IndexedDB Migration (v2.5)
+
+```
+                      +-----------------------------+
+                      |     KomiK Storage Layer     |
+                      +--------------+--------------+
+                                     |
+         +---------------------------+---------------------------+
+         |                           |                           |
+         v                           v                           v
++------------------+        +------------------+        +------------------+
+|       OPFS       |        |    IndexedDB     |        |   LocalStorage   |
+| (Archive Files)  |        | (Data & Covers)  |        | (Sync App State) |
++------------------+        +------------------+        +------------------+
+| - Raw .cbz/.cbr  |        | - Cover thumbnails|       | - Dark/Light mode|
+|   comic archives |        |   (Blobs for shelf|       |   (instant boot) |
+| - Chunked writes |        | - Reading history |       | - Reader settings|
+|   via Worker     |        |   & active page # |       |   (hairline, curl|
+| - Fast sync access|       | - Bookmarks list  | - Low-power flag |
++------------------+        +------------------+        +------------------+
+         ^                           ^                           ^
+         |                           |                           |
+   Disk (large)                 Async NoSQL                  Instant Key
+   ~GBs capacity               ~GBs capacity                 ~5 MB quota
+```
+
 * **Architecture:** Replaces monolithic `localStorage` string serialization for reading progress and bookmarks with a unified `src/storage.js` engine.
 * **Schema Upgrade (`komik` database v2):** Retains existing `'covers'` object store (Blobs) and adds `'history'` (reading position, timestamps, series metadata) and `'bookmarks'` (page index arrays).
 * **Synchronous in-memory cache:** Bootstraps synchronously from cache and hydrates asynchronously from IndexedDB, preserving instant synchronous lookups (`readHistory()`, `isCurrentPageBookmarked()`) with zero UI rendering delay.
