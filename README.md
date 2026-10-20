@@ -19,6 +19,32 @@ No account, no upload: your comics are opened and stored on your own device.
 - **Themes:** Press Green (default) and Classic Blue, light and dark.
 - **Accessibility:** labelled controls, focus rings, keyboard shortcuts (press `?`), reduce-motion support.
 
+## Tech Stack
+
+- **Core & Runtime:** Vanilla ES2022+ JavaScript (ESM, modular architecture, zero framework overhead), HTML5, and modern CSS3 (`100dvh`, CSS container queries, CSS custom properties, backdrop blur).
+- **Build & Styling:** [Vite 8](https://vitejs.dev/) with [Tailwind CSS v4](https://tailwindcss.com/) (`@tailwindcss/postcss`), Autoprefixer, PostCSS, and Prettier.
+- **Archive Extraction & Processing:**
+  - [JSZip](https://stuk.github.io/jszip/) for client-side `.cbz` / ZIP decompression in browser memory.
+  - Custom WebAssembly (`unrar` WASM) running in a dedicated worker for `.cbr` / RAR archives.
+- **Multi-Threading (Web Workers):**
+  - `thumbnail.worker.js` — Offscreen canvas-based thumbnail generation and resizing.
+  - `library.worker.js` — Chunked file writes into OPFS via `createSyncAccessHandle`.
+  - `rar.worker.js` — Off-thread WASM archive extraction keeping the UI responsive.
+- **Storage & PWA:**
+  - **OPFS (Origin Private File System):** Direct, private on-device storage for opened comic books.
+  - **IndexedDB & LocalStorage:** Reader state, reading progress, bookmarks, settings, and reading history.
+  - **Service Worker (`sw.js`):** Offline cache-first strategy with automated build-time precaching of hashed bundle assets.
+  - **Web App Manifest:** PWA installable on iOS, Android, and Desktop with custom icons and file association.
+  - **Screen Wake Lock API:** Prevents screen dimming while reading.
+- **Typography & Icons (100% Self-Hosted):**
+  - [Plus Jakarta Sans](https://fontsource.org/fonts/plus-jakarta-sans) via Fontsource (WOFF2 subsets, legacy formats dropped for performance).
+  - [Font Awesome 6 Free](https://fontawesome.com/) (solid and regular icon sets bundled locally).
+- **Testing & Quality Assurance:**
+  - Built-in Node.js test runner for unit tests (`tests/run.mjs`).
+  - [JSDOM](https://github.com/jsdom/jsdom) smoke tests verifying live DOM interactions and strict CSS class coverage (`tests/smoke.mjs`).
+  - Headless Chromium / Edge automated screenshot testing across 4 viewport breakpoints (`tests/screenshots.mjs`).
+  - GitHub Actions CI matrix on push and pull requests.
+
 ## Privacy
 
 Comic files and reading data never leave your device. All libraries and fonts are bundled — the app makes no third-party network requests after the service worker is installed. The browser keeps progress and books **per site address**: if you change the domain, export a backup first (Shelf, then Export).
