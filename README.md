@@ -27,70 +27,68 @@ Comic files and reading data never leave your device. The app downloads its own 
 
 ```
 .
-├── index.html                 # the whole app (HTML, CSS, JavaScript)
-├── sw.js                      # service worker (offline cache, update prompt)
-├── manifest.webmanifest       # install metadata
-├── _headers                   # Cloudflare response headers (CSP is report-only)
-├── icons/                     # PNG icons (180, 192, 512, maskable 512, favicon 32)
-├── tests/run.mjs              # unit and release-consistency tests
+├── index.html                 # page markup (Vite entry)
+├── src/
+│   ├── main.js                # imports everything and runs the start-up steps in order
+│   ├── state.js, dom.js       # shared state and settings; element lookups
+│   ├── pure.js, paging.js     # pure helpers and paging rules (unit tested)
+│   ├── reader.js, curl.js, guided.js            # rendering and zoom; page curl and swipe; Guided View
+│   ├── files.js, pages.js, epub.js              # opening files; page decoding and thumbnails; EPUB export
+│   ├── progress.js, bookmarks.js, shelf.js, library.js
+│   ├── theme.js, ui.js, settingsui.js, pwa.js
+│   ├── style.css              # Tailwind layers + custom CSS
+│   └── assets/                # RAR extractor (loaded only when a .cbr is opened)
+├── public/                    # copied as-is: sw.js, manifest.webmanifest, _headers, PNG icons
+├── tests/                     # unit tests (run.mjs) and browser-less smoke test (smoke.mjs)
+├── docs/v2-progress.md        # status of the v2.0.0 work
 ├── komik_product_documentation_roadmap.md   # architecture, release history, roadmap
-├── README.md
-└── .gitignore
+├── .github/workflows/ci.yml   # build + tests on every push
+├── package.json, vite.config.js, tailwind.config.js, postcss.config.js, .prettierrc.json
+└── README.md, .gitignore
 ```
-
-The hosted site is a **flat folder**: `manifest.webmanifest` and `sw.js` refer to the icons next to `index.html`, so the PNG files from `icons/` must be copied beside it when you deploy.
 
 ## Run locally
 
-The service worker and install features need a secure context; `localhost` counts as one.
+Requires Node.js 18 or newer (20 recommended).
 
 ```bash
-python3 -m http.server 8080
-# then open http://localhost:8080
+npm install
+npm run dev
 ```
 
-Any static server works (for example `npx serve .`). Opening `index.html` straight from the file system also reads comics, but the service worker, install, and device library are unavailable there.
+The service worker and install features need a secure context; `localhost` counts as one.
 
 ## Tests
 
-Requires Node.js 18 or newer. No dependencies.
-
 ```bash
-node tests/run.mjs index.html
+npm test                  # unit and release-consistency tests (no build needed)
+npm run build && npm run smoke   # boots the real bundle in jsdom, drives the main screens, checks CSS coverage
 ```
 
-The tests cover paging (single, spread, right-to-left, wide pages), panel detection for Guided View, shelf search and grouping, next-volume selection, saved-books ordering, and release consistency (manifest and icons, `sw.js` version equals the app version, and the release history lists the current version).
+The unit tests cover paging (single, spread, right-to-left, wide pages), panel detection for Guided View, shelf search and grouping, next-volume selection, saved-books ordering, and release consistency (manifest and icons, `public/sw.js` version equals the app version, and the release history lists the current version). Screenshot checks at several widths are planned for v2.0.0. Run `npm run format` before committing.
 
 ## Deploy
 
-Create a flat folder and upload it to any static host (the live site uses Cloudflare):
-
 ```bash
-mkdir -p dist
-cp index.html sw.js manifest.webmanifest _headers icons/*.png dist/
+npm run build
 ```
 
-PowerShell:
+Upload the contents of `dist/` to any static host (the live site uses Cloudflare). Everything the app needs is in `dist/`, including fonts and icons; no third-party host is contacted.
 
-```powershell
-New-Item -ItemType Directory -Force dist | Out-Null
-Copy-Item index.html, sw.js, manifest.webmanifest, _headers, icons\*.png dist\
-```
-
-Always deploy `index.html` and `sw.js` together. Users with the app already installed see a "new version is ready" banner and apply it with Reload.
+Always deploy the whole `dist/` folder at once. Users with the app already installed see a "new version is ready" banner and apply it with Reload.
 
 ### Content Security Policy
 
-`_headers` ships the policy as `Content-Security-Policy-Report-Only`. After testing on real devices, open Settings, then Diagnostics, and check that the security policy report count stays at 0. Then rename the header to `Content-Security-Policy` to enforce it.
+`public/_headers` ships the policy as `Content-Security-Policy-Report-Only`. After testing on real devices, open Settings, then Diagnostics, and check that the security policy report count stays at 0. Then rename the header to `Content-Security-Policy` to enforce it.
 
 ## Releasing a new version
 
-1. Change the version everywhere it appears in `index.html` (title, splash, home, license dialog) and add a changelog entry.
-2. Change `VERSION` in `sw.js` to the same value.
+1. Change the version everywhere it appears in `index.html` and `src/main.js` (title, splash, home, license dialog) and add a changelog entry.
+2. Change `VERSION` in `public/sw.js` to the same value.
 3. Add the release to **Release History** in the product document and mark only the newest entry as Current.
-4. Run `node tests/run.mjs index.html` and fix anything that fails.
+4. Run `npm run build`, `npm test` and `npm run smoke`, and fix anything that fails.
 5. Test install and an airplane-mode launch on one iPhone and one Android device, and copy Settings, then Diagnostics, from each.
-6. Deploy `index.html` and `sw.js` together.
+6. Deploy the whole `dist/` folder.
 
 ## Known limits
 
@@ -98,7 +96,6 @@ Always deploy `index.html` and `sw.js` together. Users with the app already inst
 - Solid RAR archives can be slow to jump around in. Converting to CBZ is faster.
 - iOS keeps the Safari tab and the installed Home Screen app in separate storage, and may remove stored data under low space. Keep a JSON backup.
 - Wake Lock, install, and the device library need HTTPS (or `localhost`).
-- The Tailwind and font files still come from CDNs; they are cached for offline use but not self-hosted yet (planned for v2.0.0).
 
 ## Roadmap
 

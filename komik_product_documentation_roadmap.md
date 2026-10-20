@@ -334,6 +334,8 @@ Small release between v1.9.0 and v2.0.0: next-volume offer, Shelf search and fil
 * The persistent-storage prompt behaves differently across browsers; verify what Safari and Firefox grant.
 
 ### 🌐 `v2.0.0` — Modernise (major)
+**Status (day 2):** Vite project with compiled Tailwind and bundled dependencies; code split into 18 modules with the start-up order preserved; 20 unit tests (importing the real modules) and a 12-check jsdom smoke test on the production bundler passing; CI workflow written. See `docs/v2-progress.md` for the area-by-area status.
+
 **Goal:** a maintainable codebase with a clean offline story.
 * Vite + modules + compiled Tailwind (B-15); self-hosted JSZip, FontAwesome and fonts, with SRI where applicable (B-03, B-04 SRI).
 * Automated checks in CI: unit tests (already started in v1.8.0), screenshot checks at 320 / 390 / 560 / 1024+ px.

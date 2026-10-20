@@ -1,0 +1,174 @@
+@tailwind base;
+@tailwind components;
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(140, 140, 140, 0.3);
+            border-radius: 99px;
+            backdrop-filter: blur(8px);
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(140, 140, 140, 0.5);
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Apple Glass Panel Design Tokens - Dark Mode */
+        .dark .glass-card {
+            background: rgba(26, 25, 22, 0.88);
+            backdrop-filter: blur(40px) saturate(210%);
+            -webkit-backdrop-filter: blur(40px) saturate(210%);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.85), inset 0 1px 1px 0 rgba(255, 255, 255, 0.2);
+            color: #f4f4f5;
+        }
+
+        /* Apple Glass Panel Design Tokens - Light Mode */
+        html:not(.dark) .glass-card {
+            background: rgba(251, 249, 243, 0.88);
+            backdrop-filter: blur(35px) saturate(190%);
+            -webkit-backdrop-filter: blur(35px) saturate(190%);
+            border: 1px solid rgba(0, 0, 0, 0.12);
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.12), inset 0 1px 1px 0 rgba(255, 255, 255, 0.8);
+            color: #18181b;
+        }
+
+        .dark .glass-pill {
+            background: rgba(255, 255, 255, 0.10);
+            backdrop-filter: blur(24px) saturate(190%);
+            -webkit-backdrop-filter: blur(24px) saturate(190%);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.18);
+            color: #f4f4f5;
+        }
+
+        html:not(.dark) .glass-pill {
+            background: rgba(0, 0, 0, 0.06);
+            backdrop-filter: blur(24px) saturate(190%);
+            -webkit-backdrop-filter: blur(24px) saturate(190%);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            color: #27272a;
+        }
+
+        .dark .glass-button {
+            background: rgba(255, 255, 255, 0.10);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.18);
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            color: #f4f4f5;
+        }
+        .dark .glass-button:hover {
+            background: rgba(255, 255, 255, 0.18);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        html:not(.dark) .glass-button {
+            background: rgba(0, 0, 0, 0.05);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.6);
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            color: #27272a;
+        }
+        html:not(.dark) .glass-button:hover {
+            background: rgba(0, 0, 0, 0.10);
+            border-color: rgba(0, 0, 0, 0.2);
+        }
+
+        .glass-button:active {
+            transform: scale(0.95);
+        }
+
+        .ui-overlay {
+            transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .ui-hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(-12px);
+        }
+        footer.ui-hidden {
+            transform: translateY(20px);
+        }
+
+        img {
+            -webkit-user-drag: none;
+            user-select: none;
+        }
+
+        .page-container {
+            transition: transform 0.1s ease-out;
+            transform-origin: center center;
+            perspective: 1600px;
+            transform-style: preserve-3d;
+        }
+
+        html, body { height: 100%; }
+        @supports (height: 100dvh) { html, body { height: 100dvh; } }
+        button, input, label { touch-action: manipulation; }
+        /* Press Green theme tokens */
+        :root { --accent: 56 194 123; --accent-hover: 79 208 140; --amber: 232 185 58; --on-accent: #0E0D0B; }
+        html:not(.dark) { --accent: 0 122 61; --accent-hover: 0 143 75; --amber: 148 106 0; --on-accent: #F3F0E6; }
+        html[data-theme="classic"], html[data-theme="classic"]:not(.dark) { --accent: 10 132 255; --accent-hover: 0 112 224; --amber: 255 159 10; --on-accent: #FFFFFF; }
+        .bg-apple-blue.text-white { color: var(--on-accent); }
+        .halftone-bg { background-image: radial-gradient(rgba(56,194,123,.09) 1px, transparent 1.6px); background-size: 9px 9px; }
+        button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible { outline: 2px solid rgb(var(--accent)); outline-offset: 2px; }
+        @media (prefers-reduced-motion: reduce) { *:not(.animate-spin), *:not(.animate-spin)::before, *:not(.animate-spin)::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }
+
+        /* Bottom dock: sized by its own width (container queries), 40px+ touch targets */
+        #bottomNavbar { container-type: inline-size; bottom: calc(env(safe-area-inset-bottom, 0px) * 0.5 + 6px); }
+        .dock-label, .dock-label-sm { display: none; }
+        @container (min-width: 400px) { .dock-label-sm { display: inline; } }
+        @container (min-width: 560px) { .dock-label { display: inline; } }
+        .dock-seg { display: flex; align-items: center; justify-content: center; gap: 6px; min-width: 38px; height: 36px; padding: 0 10px; border-radius: 12px; font-size: 12px; font-weight: 600; transition: background .2s, color .2s; }
+        .dock-icon { display: flex; align-items: center; justify-content: center; gap: 6px; min-width: 40px; height: 44px; padding: 0 10px; border-radius: 14px; font-size: 12px; font-weight: 700; }
+        .dock-menu-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; border-radius: 12px; font-size: 13px; font-weight: 600; text-align: left; }
+        .dock-menu-item:hover { background: rgba(127,127,127,.16); }
+
+        /* Page curl engine (Apple Books style) */
+        #viewportContainer { touch-action: none; }
+        #curlStage { position: absolute; inset: 0; z-index: 15; display: none; overflow: hidden; background: #000; pointer-events: none; }
+        .curl-layer, .curl-strip { position: absolute; left: 0; top: 0; pointer-events: none; }
+        .curl-sheet { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #000; pointer-events: none; }
+        .curl-strip { transform-origin: 0 0; }
+        .curl-flapwrap { -webkit-filter: drop-shadow(0 0 14px rgba(0,0,0,.55)); filter: drop-shadow(0 0 14px rgba(0,0,0,.55)); }
+        .curl-flap { transform-origin: 0 0; will-change: transform; }
+        .curl-paper { position: absolute; left: 0; top: 0; width: 100%; height: 100%; background-color: #E9E4D4; background-image: radial-gradient(rgba(23,22,19,.10) 1px, transparent 1.5px); background-size: 6px 6px; opacity: .84; }
+        .curl-under-shadow { background: linear-gradient(to right, rgba(0,0,0,.6), rgba(0,0,0,.2) 35%, rgba(0,0,0,0)); }
+        .curl-flap-shade { background: linear-gradient(to right, rgba(0,0,0,.32) 0%, rgba(255,255,255,.2) 14%, rgba(0,0,0,0) 42%, rgba(0,0,0,.1) 100%); }
+
+        #curlStage.lite .curl-flapwrap { -webkit-filter: none; filter: none; }
+
+        /* Soft fade for non-adjacent page jumps (opacity only, so zoom/pan is never overridden) */
+        .page-fade { animation: pageFadeIn 0.28s ease-out both; }
+        @keyframes pageFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .pb-safe {
+            padding-bottom: max(env(safe-area-inset-bottom, 12px), 12px);
+        }
+        .pt-safe {
+            padding-top: max(env(safe-area-inset-top, 12px), 12px);
+        }
+
+        /* Cold Startup Splash Screen Transitions */
+        #splashScreen {
+            transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.5s;
+        }
+    
+
+@tailwind utilities;
