@@ -1,0 +1,37 @@
+# Dependencies and build output
+node_modules/
+dist/
+build/
+coverage/
+tests/screenshots/
+
+# Cloudflare / local dev
+.wrangler/
+.dev.vars
+.env
+.env.*
+!.env.example
+
+# Logs and temp files
+*.log
+npm-debug.log*
+*.tmp
+*.bak
+.cache/
+
+# Editors and OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Personal comic files and exports: never commit these (size and copyright)
+*.cbz
+*.cbr
+*.cb7
+*.cbt
+*.rar
+*.zip
+*.epub

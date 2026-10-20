@@ -156,7 +156,17 @@ reflection     = matrix(1−2nx², −2nxny, −2nxny, 1−2ny², 2(M·n)nx, 2(M
 
 > Versions `v1.3.6`, `v1.4.3`, `v1.5.x` and `v1.9.1`-`v1.9.4` were never released (the small release after v1.9.0 was numbered `v1.9.5`). The planned scope of the old v1.4.1, v1.5.0 and v1.6.0 was merged into `v1.6.0`.
 
-### 🔧 `v1.9.5` — Polish & Verify *(Current)*
+### 🏗️ `v2.0.0` — Vite Build & Self-Hosted *(Current)*
+* **Vite 5 build:** Tailwind CSS compiled at build time (no Play CDN), PostCSS, Prettier, `vite.config.js` with custom plugins.
+* **All dependencies self-hosted:** Font Awesome (solid + regular), Plus Jakarta Sans, and JSZip bundled — zero third-party network requests after first install.
+* **Module workers:** thumbnail, library and RAR extraction each run in a proper `Worker` (module URL), replacing the old Blob-URL approach; CSP `worker-src 'self'` now works without `blob:`.
+* **Automated SW precaching:** `generate-precache` Vite plugin injects all hashed `dist/assets/` filenames into `dist/sw.js` and writes `dist/precache.json` at build time.
+* **Font trimming:** `dropLegacyFonts` Vite plugin strips `.ttf`/`.woff` URL references; only `.woff2` files are emitted (>500 KB saved).
+* **Code quality:** monolithic `index.html` script split into 18 ESM modules (`src/`); all `steps` arrays replaced with per-module `init()` functions; `main.js` calls them in explicit order.
+* **Content Security Policy enforced:** `_headers` promoted from `Content-Security-Policy-Report-Only` to `Content-Security-Policy`; CDN hosts removed; `script-src` no longer needs `unsafe-inline`.
+* **Test suite:** 20 unit tests + 12 jsdom smoke checks + 4 viewport screenshot tests; all run in CI on every push.
+
+### 🔧 `v1.9.5` — Polish & Verify *(shipped)*
 * **Next volume offer:** on the last page, after a short pause, a banner offers the next issue of the same series when it is kept on this device (smallest higher issue number; opens with the existing resume logic).
 * **Shelf search and filter:** search by title, series or issue number (all words must match; `#10` works); "On device" filter; group headers follow the filtered list.
 * **Saved books manager (Settings → Saved books → Manage):** total size, sort by largest or by not read lately (never-read first), remove one, remove finished, remove all. Progress and bookmarks are kept.
@@ -334,6 +344,8 @@ Small release between v1.9.0 and v2.0.0: next-volume offer, Shelf search and fil
 * The persistent-storage prompt behaves differently across browsers; verify what Safari and Firefox grant.
 
 ### 🌐 `v2.0.0` — Modernise (major)
+**Status (day 2):** Vite project with compiled Tailwind and bundled dependencies; code split into 18 modules with the start-up order preserved; 20 unit tests (importing the real modules) and a 12-check jsdom smoke test on the production bundler passing; CI workflow written. See `docs/v2-progress.md` for the area-by-area status.
+
 **Goal:** a maintainable codebase with a clean offline story.
 * Vite + modules + compiled Tailwind (B-15); self-hosted JSZip, FontAwesome and fonts, with SRI where applicable (B-03, B-04 SRI).
 * Automated checks in CI: unit tests (already started in v1.8.0), screenshot checks at 320 / 390 / 560 / 1024+ px.

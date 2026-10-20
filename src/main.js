@@ -1,0 +1,43 @@
+import '@fontsource/plus-jakarta-sans/latin-300.css';
+import '@fontsource/plus-jakarta-sans/latin-400.css';
+import '@fontsource/plus-jakarta-sans/latin-500.css';
+import '@fontsource/plus-jakarta-sans/latin-600.css';
+import '@fontsource/plus-jakarta-sans/latin-700.css';
+import '@fontsource/plus-jakarta-sans/latin-800.css';
+import '@fortawesome/fontawesome-free/css/fontawesome.min.css';
+import '@fortawesome/fontawesome-free/css/solid.min.css';
+import '@fortawesome/fontawesome-free/css/regular.min.css';
+import './style.css';
+
+import { initDOM } from './dom.js';
+import { initThemeModule } from './theme.js';
+import { initUI } from './ui.js';
+import { initFiles } from './files.js';
+import { initProgress } from './progress.js';
+import { initBookmarks } from './bookmarks.js';
+import { initShelf } from './shelf.js';
+import { initCurl } from './curl.js';
+import { initReader } from './reader.js';
+import { initEpub } from './epub.js';
+import { initLibrary } from './library.js';
+import { initPWA } from './pwa.js';
+import { initGuided } from './guided.js';
+import { initSettingsUI } from './settingsui.js';
+import { initState } from './state.js';
+
+// Initialize modules in the same order as the original monolithic script.
+initDOM();
+initThemeModule();
+initUI();
+initFiles();
+initProgress();
+initBookmarks();
+initShelf();
+initCurl();
+initReader();
+initEpub();
+initLibrary();
+initPWA();
+initGuided();
+initSettingsUI();
+initState();
