@@ -1,5 +1,5 @@
 /* KomiK service worker. Bump VERSION on every release so the app can offer the update. */
-const VERSION = 'v1.9.5';
+const VERSION = 'v2.0.0';
 const CORE = `komik-core-${VERSION}`;
 const RUNTIME = 'komik-runtime';
 const CORE_REQUIRED = ['./'];

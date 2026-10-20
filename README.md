@@ -3,7 +3,7 @@
 A private, installable comic reader for `.cbz` and `.cbr` files that runs entirely in your browser.
 No account, no upload: your comics are opened and stored on your own device.
 
-**Current version:** v1.9.5 (see the release history in [the product document](komik_product_documentation_roadmap.md))
+**Current version:** v2.0.0 (see the release history in [the product document](komik_product_documentation_roadmap.md))
 
 ## Features
 
@@ -21,7 +21,7 @@ No account, no upload: your comics are opened and stored on your own device.
 
 ## Privacy
 
-Comic files and reading data never leave your device. The app downloads its own libraries and fonts (Tailwind, Font Awesome, JSZip, Google Fonts) from public CDNs on first load and caches them afterwards. The browser keeps progress and books **per site address**: if you change the domain, export a backup first (Shelf, then Export).
+Comic files and reading data never leave your device. All libraries and fonts are bundled — the app makes no third-party network requests after the service worker is installed. The browser keeps progress and books **per site address**: if you change the domain, export a backup first (Shelf, then Export).
 
 ## Project layout
 
@@ -29,17 +29,18 @@ Comic files and reading data never leave your device. The app downloads its own 
 .
 ├── index.html                 # page markup (Vite entry)
 ├── src/
-│   ├── main.js                # imports everything and runs the start-up steps in order
+│   ├── main.js                # imports everything and calls each init() function in order
 │   ├── state.js, dom.js       # shared state and settings; element lookups
 │   ├── pure.js, paging.js     # pure helpers and paging rules (unit tested)
 │   ├── reader.js, curl.js, guided.js            # rendering and zoom; page curl and swipe; Guided View
 │   ├── files.js, pages.js, epub.js              # opening files; page decoding and thumbnails; EPUB export
 │   ├── progress.js, bookmarks.js, shelf.js, library.js
 │   ├── theme.js, ui.js, settingsui.js, pwa.js
+│   ├── workers/               # thumbnail.worker.js, library.worker.js, rar.worker.js
 │   ├── style.css              # Tailwind layers + custom CSS
-│   └── assets/                # RAR extractor (loaded only when a .cbr is opened)
+│   └── assets/                # RAR extractor WASM (loaded only when a .cbr is opened)
 ├── public/                    # copied as-is: sw.js, manifest.webmanifest, _headers, PNG icons
-├── tests/                     # unit tests (run.mjs) and browser-less smoke test (smoke.mjs)
+├── tests/                     # run.mjs (unit), smoke.mjs (jsdom), screenshots.mjs (headless)
 ├── docs/v2-progress.md        # status of the v2.0.0 work
 ├── komik_product_documentation_roadmap.md   # architecture, release history, roadmap
 ├── .github/workflows/ci.yml   # build + tests on every push
@@ -49,7 +50,7 @@ Comic files and reading data never leave your device. The app downloads its own 
 
 ## Run locally
 
-Requires Node.js 18 or newer (20 recommended).
+Requires Node.js 18 or newer (20+ recommended).
 
 ```bash
 npm install
@@ -61,11 +62,12 @@ The service worker and install features need a secure context; `localhost` count
 ## Tests
 
 ```bash
-npm test                  # unit and release-consistency tests (no build needed)
-npm run build && npm run smoke   # boots the real bundle in jsdom, drives the main screens, checks CSS coverage
+npm test                              # unit and release-consistency tests (no build needed)
+npm run build && npm run smoke        # boots the real bundle in jsdom, drives the main screens, checks CSS coverage
+npm run build && npm run screenshots  # headless screenshot checks at 320/390/560/1024 px (Edge or Chrome required)
 ```
 
-The unit tests cover paging (single, spread, right-to-left, wide pages), panel detection for Guided View, shelf search and grouping, next-volume selection, saved-books ordering, and release consistency (manifest and icons, `public/sw.js` version equals the app version, and the release history lists the current version). Screenshot checks at several widths are planned for v2.0.0. Run `npm run format` before committing.
+The unit tests cover paging (single, spread, right-to-left, wide pages), panel detection for Guided View, shelf search and grouping, next-volume selection, saved-books ordering, and release consistency (manifest and icons, `public/sw.js` version equals the app version, and the release history lists the current version). Run `npm run format` before committing.
 
 ## Deploy
 
@@ -73,21 +75,21 @@ The unit tests cover paging (single, spread, right-to-left, wide pages), panel d
 npm run build
 ```
 
-Upload the contents of `dist/` to any static host (the live site uses Cloudflare). Everything the app needs is in `dist/`, including fonts and icons; no third-party host is contacted.
+Upload the contents of `dist/` to any static host (the live site uses Cloudflare). Everything the app needs is in `dist/`, including fonts, icons, and workers; no third-party host is contacted.
 
 Always deploy the whole `dist/` folder at once. Users with the app already installed see a "new version is ready" banner and apply it with Reload.
 
 ### Content Security Policy
 
-`public/_headers` ships the policy as `Content-Security-Policy-Report-Only`. After testing on real devices, open Settings, then Diagnostics, and check that the security policy report count stays at 0. Then rename the header to `Content-Security-Policy` to enforce it.
+`public/_headers` ships an enforced `Content-Security-Policy`. All scripts and styles are self-hosted, so no CDN allowlist is needed. The only remaining `'unsafe-inline'` is in `style-src`, required for `.style.property` assignments in JS (canvas-based page curl, zoom transforms, and progress bar width). If these are ever moved to CSS custom properties, `unsafe-inline` can be removed entirely.
 
 ## Releasing a new version
 
-1. Change the version everywhere it appears in `index.html` and `src/main.js` (title, splash, home, license dialog) and add a changelog entry.
+1. Change the version everywhere it appears in `index.html` (title, splash, home, changelog, license button) and add a changelog entry.
 2. Change `VERSION` in `public/sw.js` to the same value.
 3. Add the release to **Release History** in the product document and mark only the newest entry as Current.
-4. Run `npm run build`, `npm test` and `npm run smoke`, and fix anything that fails.
-5. Test install and an airplane-mode launch on one iPhone and one Android device, and copy Settings, then Diagnostics, from each.
+4. Run `npm run build`, `npm test`, `npm run smoke`, and `npm run screenshots`, and fix anything that fails.
+5. Test install and an airplane-mode launch on one iPhone and one Android device, and copy Settings → Diagnostics from each.
 6. Deploy the whole `dist/` folder.
 
 ## Known limits
@@ -99,8 +101,9 @@ Always deploy the whole `dist/` folder at once. Users with the app already insta
 
 ## Roadmap
 
-See the product document for details. Next is **v2.0.0**: a Vite build with compiled Tailwind, self-hosted dependencies, and automated checks. After that: remote libraries (OPDS / WebDAV) and optional on-device AI features.
+See the product document for details. Next: **v2.1.0** — remote libraries (OPDS / WebDAV). Further out: optional on-device AI features.
 
 ## License
 
 MIT. The license text is available in the app (Home or More menu, then About and license).
+

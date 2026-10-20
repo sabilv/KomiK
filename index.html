@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>KomiK v1.9.5 - Ultra-Sleek CBZ & CBR Comic Reader</title>
+    <title>KomiK v2.0.0 - Ultra-Sleek CBZ & CBR Comic Reader</title>
 
     <!-- iOS Home Screen PWA Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -33,7 +33,7 @@
         </div>
 
         <div class="flex flex-col items-center space-y-2 mb-4">
-            <span class="text-[10px] font-mono font-bold px-3 py-1 rounded-full bg-white/10 text-apple-blue border border-apple-blue/30">v1.9.5</span>
+            <span class="text-[10px] font-mono font-bold px-3 py-1 rounded-full bg-white/10 text-apple-blue border border-apple-blue/30">v2.0.0</span>
             <span class="text-[11px] text-zinc-500 font-medium">Created by Gemini with Sval</span>
         </div>
     </div>
@@ -149,7 +149,7 @@
                 
                 <svg viewBox="0 0 130 130" class="w-20 h-20 rounded-3xl shadow-lg mb-6 group-hover:scale-105 transition-transform" role="img" aria-label="KomiK logo"><rect width="130" height="130" rx="29" fill="#0E0D0B"/><polygon points="38,84 32,110 64,84" fill="#38C27B"/><rect x="22" y="24" width="86" height="64" rx="20" fill="#38C27B"/><path d="M52 43V75M80 43L55 59M60 58L84 77" stroke="#0E0D0B" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
                 <h2 class="text-3xl font-black tracking-tight font-sans text-zinc-900 dark:text-white mb-1">KomiK</h2>
-                <span class="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full glass-pill text-apple-blue mb-4 border border-apple-blue/30">v1.9.5</span>
+                <span class="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full glass-pill text-apple-blue mb-4 border border-apple-blue/30">v2.0.0</span>
                 <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-8 leading-relaxed max-w-sm">Select or drag & drop your <span class="text-zinc-800 dark:text-zinc-200 font-bold">.cbz</span> or <span class="text-zinc-800 dark:text-zinc-200 font-bold">.cbr</span> comic files. 100% private, client-side processing.</p>
                 
                 <input type="file" id="fileInput" class="hidden" accept="*/*" multiple>
@@ -179,7 +179,7 @@
                     <span class="text-zinc-400">•</span>
                     <span>Created by Gemini with Sval</span>
                     <span class="text-zinc-400">•</span>
-                    <button type="button" class="open-license-btn text-apple-amber hover:underline font-semibold focus:outline-none">v1.9.5 • MIT License</button>
+                    <button type="button" class="open-license-btn text-apple-amber hover:underline font-semibold focus:outline-none">v2.0.0 • MIT License</button>
                     <span class="text-zinc-400">•</span>
                     <button type="button" id="homeSettingsBtn" class="text-apple-amber hover:underline font-semibold focus:outline-none">Settings</button>
                 </div>
@@ -207,7 +207,7 @@
                         <button id="modalTabLicense" class="text-xs font-bold uppercase tracking-wider text-apple-blue border-b-2 border-apple-blue pb-1 focus:outline-none">License</button>
                         <button id="modalTabChangelog" class="text-xs font-bold uppercase tracking-wider text-zinc-400 hover:text-zinc-200 transition pb-1 focus:outline-none flex items-center space-x-1.5">
                             <span>Changelog</span>
-                            <span class="text-[9px] bg-apple-blue/20 text-apple-blue px-1.5 rounded-full font-mono">v1.9.5</span>
+                            <span class="text-[9px] bg-apple-blue/20 text-apple-blue px-1.5 rounded-full font-mono">v2.0.0</span>
                         </button>
                     </div>
                     <button id="closeLicenseBtn" aria-label="Close" class="text-zinc-400 hover:text-white p-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/10">
@@ -239,12 +239,26 @@
 
                 <!-- Changelog Tab Content -->
                 <div id="modalContentChangelog" class="hidden text-xs text-zinc-600 dark:text-zinc-300 space-y-4 leading-relaxed overflow-y-auto pr-1 flex-1 font-sans">
-                    
+                    <!-- v2.0.0 -->
+                    <div class="border-b border-black/10 dark:border-white/10 pb-3">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="font-bold text-zinc-900 dark:text-white text-sm">v2.0.0 - Vite Build &amp; Self-Hosted</span>
+                            <span class="text-[10px] text-apple-blue font-mono bg-apple-blue/10 px-2 py-0.5 rounded-full border border-apple-blue/20">Current Build</span>
+                        </div>
+                        <ul class="list-disc list-inside text-[11px] text-zinc-500 dark:text-zinc-400 space-y-1 mt-1.5">
+                            <li>Vite 5 build with compiled Tailwind CSS — no more Play CDN; all dependencies self-hosted.</li>
+                            <li>Font Awesome, Plus Jakarta Sans and JSZip are bundled; no third-party requests after install.</li>
+                            <li>Thumbnail, library and RAR workers are now proper module workers, cleaning up the security policy.</li>
+                            <li>Service worker automatically precaches all hashed JS, CSS, font and WASM assets at build time.</li>
+                            <li>Content Security Policy is now enforced (no longer report-only).</li>
+                            <li>Automated screenshot tests at 4 viewport widths added to CI.</li>
+                        </ul>
+                    </div>
+
                     <!-- v1.9.5 -->
                     <div class="border-b border-black/10 dark:border-white/10 pb-3">
                         <div class="flex items-center justify-between mb-1">
                             <span class="font-bold text-zinc-900 dark:text-white text-sm">v1.9.5 - Polish &amp; Verify</span>
-                            <span class="text-[10px] text-apple-blue font-mono bg-apple-blue/10 px-2 py-0.5 rounded-full border border-apple-blue/20">Current Build</span>
                         </div>
                         <ul class="list-disc list-inside text-[11px] text-zinc-500 dark:text-zinc-400 space-y-1 mt-1.5">
                             <li>Finish a book and KomiK offers the next volume in the same series, if it is kept on this device.</li>
