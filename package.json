@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "test": "node tests/run.mjs index.html",
     "smoke": "node tests/smoke.mjs --strict",
+    "screenshots": "node tests/screenshots.mjs",
     "format": "prettier --write \"src/**/*.js\" \"tests/**/*.mjs\""
   },
   "devDependencies": {

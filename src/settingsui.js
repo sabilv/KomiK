@@ -205,66 +205,19 @@ export function closeSettings() {
   if (settingsPrevFocus && settingsPrevFocus.focus) settingsPrevFocus.focus();
 }
 
-/** Load-time work, run by main.js in the original order. */
-export const steps = [
-  [
-    395,
-    () => {
-      hairline = document.createElement('div');
-    }
-  ],
-  [
-    396,
-    () => {
-      hairline.className = 'fixed bottom-0 h-[3px] bg-apple-blue z-20 pointer-events-none transition-opacity duration-300 opacity-0';
-    }
-  ],
-  [
-    397,
-    () => {
-      hairline.setAttribute('aria-hidden', 'true');
-    }
-  ],
-  [
-    398,
-    () => {
-      document.body.appendChild(hairline);
-    }
-  ],
-  [
-    407,
-    () => {
-      settingsModal = document.createElement('div');
-    }
-  ],
-  [
-    408,
-    () => {
-      settingsModal.className = 'fixed inset-0 z-50 bg-[#0E0D0B]/80 backdrop-blur-xl hidden items-center justify-center p-4';
-    }
-  ],
-  [
-    409,
-    () => {
-      settingsModal.setAttribute('role', 'dialog');
-    }
-  ],
-  [
-    410,
-    () => {
-      settingsModal.setAttribute('aria-modal', 'true');
-    }
-  ],
-  [
-    411,
-    () => {
-      settingsModal.setAttribute('aria-labelledby', 'settingsTitle');
-    }
-  ],
-  [
-    412,
-    () => {
-      settingsModal.innerHTML = `<div class="max-w-md w-full glass-card rounded-3xl p-6 shadow-2xl flex flex-col max-h-[85vh]">
+/** Initialize settings hairline, settings modal, observer, and defaults. */
+export function initSettingsUI() {
+  hairline = document.createElement('div');
+  hairline.className = 'fixed bottom-0 h-[3px] bg-apple-blue z-20 pointer-events-none transition-opacity duration-300 opacity-0';
+  hairline.setAttribute('aria-hidden', 'true');
+  document.body.appendChild(hairline);
+
+  settingsModal = document.createElement('div');
+  settingsModal.className = 'fixed inset-0 z-50 bg-[#0E0D0B]/80 backdrop-blur-xl hidden items-center justify-center p-4';
+  settingsModal.setAttribute('role', 'dialog');
+  settingsModal.setAttribute('aria-modal', 'true');
+  settingsModal.setAttribute('aria-labelledby', 'settingsTitle');
+  settingsModal.innerHTML = `<div class="max-w-md w-full glass-card rounded-3xl p-6 shadow-2xl flex flex-col max-h-[85vh]">
             <div class="flex justify-between items-center pb-3 border-b border-black/10 dark:border-white/10 shrink-0">
                 <h2 id="settingsTitle" class="text-base font-bold">Settings</h2>
                 <button id="closeSettingsBtn" aria-label="Close settings" class="p-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/10"><i class="fa-solid fa-xmark"></i></button>
@@ -275,108 +228,59 @@ export const steps = [
                 <button id="resetSettingsBtn" class="text-xs font-bold text-apple-blue hover:underline">Reset to defaults</button>
                 <button id="doneSettingsBtn" class="px-5 py-2.5 glass-button text-xs font-bold rounded-xl">Done</button>
             </div></div>`;
+  document.body.appendChild(settingsModal);
+
+  settingsList = settingsModal.querySelector('#settingsList');
+
+  settingsModal.querySelector('#closeSettingsBtn').addEventListener('click', closeSettings);
+  settingsModal.querySelector('#doneSettingsBtn').addEventListener('click', closeSettings);
+  settingsModal.querySelector('#resetSettingsBtn').addEventListener('click', () => {
+    Object.assign(settings, SETTINGS_DEFAULTS);
+    try {
+      localStorage.removeItem('komik_hints');
+    } catch (e) {}
+    saveSettings();
+    applySettings();
+    renderSettings();
+  });
+  settingsModal.addEventListener('click', (e) => {
+    if (e.target === settingsModal) closeSettings();
+  });
+
+  const menuSettingsBtn = document.getElementById('menuSettingsBtn');
+  if (menuSettingsBtn) menuSettingsBtn.addEventListener('click', openSettings);
+
+  const homeSettingsBtn = document.getElementById('homeSettingsBtn');
+  if (homeSettingsBtn) homeSettingsBtn.addEventListener('click', openSettings);
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeSettings();
+      const licenseModal = document.getElementById('licenseModal');
+      if (licenseModal) licenseModal.classList.add('hidden');
     }
-  ],
-  [
-    413,
-    () => {
-      document.body.appendChild(settingsModal);
+    if (e.key === 'Tab' && !settingsModal.classList.contains('hidden')) {
+      const f = Array.from(settingsModal.querySelectorAll('button')).filter((b) => b.offsetParent !== null);
+      if (!f.length) return;
+      const first = f[0],
+        last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
     }
-  ],
-  [
-    414,
-    () => {
-      settingsList = settingsModal.querySelector('#settingsList');
-    }
-  ],
-  [
-    419,
-    () => {
-      settingsModal.querySelector('#closeSettingsBtn').addEventListener('click', closeSettings);
-    }
-  ],
-  [
-    420,
-    () => {
-      settingsModal.querySelector('#doneSettingsBtn').addEventListener('click', closeSettings);
-    }
-  ],
-  [
-    421,
-    () => {
-      settingsModal.querySelector('#resetSettingsBtn').addEventListener('click', () => {
-        Object.assign(settings, SETTINGS_DEFAULTS);
-        try {
-          localStorage.removeItem('komik_hints');
-        } catch (e) {}
-        saveSettings();
-        applySettings();
-        renderSettings();
-      });
-    }
-  ],
-  [
-    422,
-    () => {
-      settingsModal.addEventListener('click', (e) => {
-        if (e.target === settingsModal) closeSettings();
-      });
-    }
-  ],
-  [
-    423,
-    () => {
-      document.getElementById('menuSettingsBtn').addEventListener('click', openSettings);
-    }
-  ],
-  [
-    424,
-    () => {
-      document.getElementById('homeSettingsBtn').addEventListener('click', openSettings);
-    }
-  ],
-  [
-    425,
-    () => {
-      window.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-          closeSettings();
-          licenseModal.classList.add('hidden');
-        }
-        if (e.key === 'Tab' && !settingsModal.classList.contains('hidden')) {
-          const f = Array.from(settingsModal.querySelectorAll('button')).filter((b) => b.offsetParent !== null);
-          if (!f.length) return;
-          const first = f[0],
-            last = f[f.length - 1];
-          if (e.shiftKey && document.activeElement === first) {
-            e.preventDefault();
-            last.focus();
-          } else if (!e.shiftKey && document.activeElement === last) {
-            e.preventDefault();
-            first.focus();
-          }
-        }
-      });
-    }
-  ],
-  [
-    426,
-    () => {
-      thumbnailDrawer.inert = true;
-    }
-  ],
-  [
-    427,
-    () => {
-      new MutationObserver(() => {
-        thumbnailDrawer.inert = thumbnailDrawer.classList.contains('-translate-x-[110%]');
-      }).observe(thumbnailDrawer, { attributes: true, attributeFilter: ['class'] });
-    }
-  ],
-  [
-    428,
-    () => {
-      applySettings();
-    }
-  ]
-];
+  });
+
+  if (thumbnailDrawer) {
+    thumbnailDrawer.inert = true;
+    new MutationObserver(() => {
+      thumbnailDrawer.inert = thumbnailDrawer.classList.contains('-translate-x-[110%]');
+    }).observe(thumbnailDrawer, { attributes: true, attributeFilter: ['class'] });
+  }
+
+  applySettings();
+}
+

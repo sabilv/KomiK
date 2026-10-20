@@ -136,414 +136,74 @@ export let toastNotification;
 
 export let toastMessage;
 
-/** Load-time work, run by main.js in the original order. */
-export const steps = [
-  [
-    1,
-    () => {
-      splashScreen = document.getElementById('splashScreen');
-    }
-  ],
-  [
-    2,
-    () => {
-      dropZone = document.getElementById('dropZone');
-    }
-  ],
-  [
-    3,
-    () => {
-      fileInput = document.getElementById('fileInput');
-    }
-  ],
-  [
-    4,
-    () => {
-      browseFilesBtn = document.getElementById('browseFilesBtn');
-    }
-  ],
-  [
-    5,
-    () => {
-      openFileBtnTop = document.getElementById('openFileBtnTop');
-    }
-  ],
-  [
-    6,
-    () => {
-      closeComicBtn = document.getElementById('closeComicBtn');
-    }
-  ],
-  [
-    7,
-    () => {
-      demoComicBtn = document.getElementById('demoComicBtn');
-    }
-  ],
-  [
-    8,
-    () => {
-      loadingOverlay = document.getElementById('loadingOverlay');
-    }
-  ],
-  [
-    9,
-    () => {
-      loadingText = document.getElementById('loadingText');
-    }
-  ],
-  [
-    10,
-    () => {
-      comicTitle = document.getElementById('comicTitle');
-    }
-  ],
-  [
-    11,
-    () => {
-      pageCounterTop = document.getElementById('pageCounterTop');
-    }
-  ],
-  [
-    12,
-    () => {
-      readingTimeTop = document.getElementById('readingTimeTop');
-    }
-  ],
-  [
-    13,
-    () => {
-      readingEstimateBottom = document.getElementById('readingEstimateBottom');
-    }
-  ],
-  [
-    14,
-    () => {
-      readingEstimateDivider = document.getElementById('readingEstimateDivider');
-    }
-  ],
-  [
-    15,
-    () => {
-      topNavbar = document.getElementById('topNavbar');
-    }
-  ],
-  [
-    16,
-    () => {
-      bottomNavbar = document.getElementById('bottomNavbar');
-    }
-  ],
-  [
-    17,
-    () => {
-      viewportContainer = document.getElementById('viewportContainer');
-    }
-  ],
-  [
-    18,
-    () => {
-      pageDisplay = document.getElementById('pageDisplay');
-    }
-  ],
-  [
-    19,
-    () => {
-      webtoonDisplay = document.getElementById('webtoonDisplay');
-    }
-  ],
-  [
-    20,
-    () => {
-      prevPageBtn = document.getElementById('prevPageBtn');
-    }
-  ],
-  [
-    21,
-    () => {
-      nextPageBtn = document.getElementById('nextPageBtn');
-    }
-  ],
-  [
-    22,
-    () => {
-      pageSlider = document.getElementById('pageSlider');
-    }
-  ],
-  [
-    23,
-    () => {
-      pageInput = document.getElementById('pageInput');
-    }
-  ],
-  [
-    24,
-    () => {
-      pageNumberPrev = document.getElementById('pageNumberPrev');
-    }
-  ],
-  [
-    25,
-    () => {
-      pageNumberTotal = document.getElementById('pageNumberTotal');
-    }
-  ],
-  [
-    26,
-    () => {
-      totalPagesText = document.getElementById('totalPagesText');
-    }
-  ],
-  [
-    27,
-    () => {
-      sliderPreviewBox = document.getElementById('sliderPreviewBox');
-    }
-  ],
-  [
-    28,
-    () => {
-      sliderPreviewImg = document.getElementById('sliderPreviewImg');
-    }
-  ],
-  [
-    29,
-    () => {
-      sliderPreviewNum = document.getElementById('sliderPreviewNum');
-    }
-  ],
-  [
-    30,
-    () => {
-      zonePrev = document.getElementById('zonePrev');
-    }
-  ],
-  [
-    31,
-    () => {
-      zoneNext = document.getElementById('zoneNext');
-    }
-  ],
-  [
-    32,
-    () => {
-      modeSingleBtn = document.getElementById('modeSingleBtn');
-    }
-  ],
-  [
-    33,
-    () => {
-      modeDoubleBtn = document.getElementById('modeDoubleBtn');
-    }
-  ],
-  [
-    34,
-    () => {
-      modeWebtoonBtn = document.getElementById('modeWebtoonBtn');
-    }
-  ],
-  [
-    35,
-    () => {
-      toggleRtlBtn = document.getElementById('toggleRtlBtn');
-    }
-  ],
-  [
-    36,
-    () => {
-      themeModeBtn = document.getElementById('themeModeBtn');
-    }
-  ],
-  [
-    37,
-    () => {
-      themeIcon = document.getElementById('themeIcon');
-    }
-  ],
-  [
-    38,
-    () => {
-      themeLabel = document.getElementById('themeLabel');
-    }
-  ],
-  [
-    39,
-    () => {
-      bookmarkBtn = document.getElementById('bookmarkBtn');
-    }
-  ],
-  [
-    40,
-    () => {
-      bookmarkIcon = document.getElementById('bookmarkIcon');
-    }
-  ],
-  [
-    41,
-    () => {
-      quickShelfBtn = document.getElementById('quickShelfBtn');
-    }
-  ],
-  [
-    42,
-    () => {
-      zoomInBtn = document.getElementById('zoomInBtn');
-    }
-  ],
-  [
-    43,
-    () => {
-      zoomOutBtn = document.getElementById('zoomOutBtn');
-    }
-  ],
-  [
-    44,
-    () => {
-      zoomResetBtn = document.getElementById('zoomResetBtn');
-    }
-  ],
-  [
-    45,
-    () => {
-      zoomLevelText = document.getElementById('zoomLevelText');
-    }
-  ],
-  [
-    46,
-    () => {
-      fitPageBtn = document.getElementById('fitPageBtn');
-    }
-  ],
-  [
-    47,
-    () => {
-      fitWidthBtn = document.getElementById('fitWidthBtn');
-    }
-  ],
-  [
-    48,
-    () => {
-      zoomResetHud = document.getElementById('zoomResetHud');
-    }
-  ],
-  [
-    49,
-    () => {
-      hudResetBtn = document.getElementById('hudResetBtn');
-    }
-  ],
-  [
-    50,
-    () => {
-      hudZoomText = document.getElementById('hudZoomText');
-    }
-  ],
-  [
-    51,
-    () => {
-      thumbnailDrawer = document.getElementById('thumbnailDrawer');
-    }
-  ],
-  [
-    52,
-    () => {
-      toggleDrawerBtn = document.getElementById('toggleDrawerBtn');
-    }
-  ],
-  [
-    53,
-    () => {
-      closeDrawerBtn = document.getElementById('closeDrawerBtn');
-    }
-  ],
-  [
-    54,
-    () => {
-      thumbnailGrid = document.getElementById('thumbnailGrid');
-    }
-  ],
-  [
-    55,
-    () => {
-      tabPagesBtn = document.getElementById('tabPagesBtn');
-    }
-  ],
-  [
-    56,
-    () => {
-      tabBookmarksBtn = document.getElementById('tabBookmarksBtn');
-    }
-  ],
-  [
-    57,
-    () => {
-      tabRecentsBtn = document.getElementById('tabRecentsBtn');
-    }
-  ],
-  [
-    58,
-    () => {
-      bookmarksView = document.getElementById('bookmarksView');
-    }
-  ],
-  [
-    59,
-    () => {
-      bookmarksList = document.getElementById('bookmarksList');
-    }
-  ],
-  [
-    60,
-    () => {
-      bookmarkBadgeCount = document.getElementById('bookmarkBadgeCount');
-    }
-  ],
-  [
-    61,
-    () => {
-      clearBookmarksBtn = document.getElementById('clearBookmarksBtn');
-    }
-  ],
-  [
-    62,
-    () => {
-      recentsView = document.getElementById('recentsView');
-    }
-  ],
-  [
-    63,
-    () => {
-      recentsList = document.getElementById('recentsList');
-    }
-  ],
-  [
-    64,
-    () => {
-      clearHistoryBtn = document.getElementById('clearHistoryBtn');
-    }
-  ],
-  [
-    65,
-    () => {
-      exportEpubBtn = document.getElementById('exportEpubBtn');
-    }
-  ],
-  [
-    66,
-    () => {
-      fullscreenBtn = document.getElementById('fullscreenBtn');
-    }
-  ],
-  [
-    67,
-    () => {
-      toastNotification = document.getElementById('toastNotification');
-    }
-  ],
-  [
-    68,
-    () => {
-      toastMessage = document.getElementById('toastMessage');
-    }
-  ]
-];
+/** Initialize element lookups from DOM. */
+export function initDOM() {
+  splashScreen = document.getElementById('splashScreen');
+  dropZone = document.getElementById('dropZone');
+  fileInput = document.getElementById('fileInput');
+  browseFilesBtn = document.getElementById('browseFilesBtn');
+  openFileBtnTop = document.getElementById('openFileBtnTop');
+  closeComicBtn = document.getElementById('closeComicBtn');
+  demoComicBtn = document.getElementById('demoComicBtn');
+  loadingOverlay = document.getElementById('loadingOverlay');
+  loadingText = document.getElementById('loadingText');
+  comicTitle = document.getElementById('comicTitle');
+  pageCounterTop = document.getElementById('pageCounterTop');
+  readingTimeTop = document.getElementById('readingTimeTop');
+  readingEstimateBottom = document.getElementById('readingEstimateBottom');
+  readingEstimateDivider = document.getElementById('readingEstimateDivider');
+  topNavbar = document.getElementById('topNavbar');
+  bottomNavbar = document.getElementById('bottomNavbar');
+  viewportContainer = document.getElementById('viewportContainer');
+  pageDisplay = document.getElementById('pageDisplay');
+  webtoonDisplay = document.getElementById('webtoonDisplay');
+  prevPageBtn = document.getElementById('prevPageBtn');
+  nextPageBtn = document.getElementById('nextPageBtn');
+  pageSlider = document.getElementById('pageSlider');
+  pageInput = document.getElementById('pageInput');
+  pageNumberPrev = document.getElementById('pageNumberPrev');
+  pageNumberTotal = document.getElementById('pageNumberTotal');
+  totalPagesText = document.getElementById('totalPagesText');
+  sliderPreviewBox = document.getElementById('sliderPreviewBox');
+  sliderPreviewImg = document.getElementById('sliderPreviewImg');
+  sliderPreviewNum = document.getElementById('sliderPreviewNum');
+  zonePrev = document.getElementById('zonePrev');
+  zoneNext = document.getElementById('zoneNext');
+  modeSingleBtn = document.getElementById('modeSingleBtn');
+  modeDoubleBtn = document.getElementById('modeDoubleBtn');
+  modeWebtoonBtn = document.getElementById('modeWebtoonBtn');
+  toggleRtlBtn = document.getElementById('toggleRtlBtn');
+  themeModeBtn = document.getElementById('themeModeBtn');
+  themeIcon = document.getElementById('themeIcon');
+  themeLabel = document.getElementById('themeLabel');
+  bookmarkBtn = document.getElementById('bookmarkBtn');
+  bookmarkIcon = document.getElementById('bookmarkIcon');
+  quickShelfBtn = document.getElementById('quickShelfBtn');
+  zoomInBtn = document.getElementById('zoomInBtn');
+  zoomOutBtn = document.getElementById('zoomOutBtn');
+  zoomResetBtn = document.getElementById('zoomResetBtn');
+  zoomLevelText = document.getElementById('zoomLevelText');
+  fitPageBtn = document.getElementById('fitPageBtn');
+  fitWidthBtn = document.getElementById('fitWidthBtn');
+  zoomResetHud = document.getElementById('zoomResetHud');
+  hudResetBtn = document.getElementById('hudResetBtn');
+  hudZoomText = document.getElementById('hudZoomText');
+  thumbnailDrawer = document.getElementById('thumbnailDrawer');
+  toggleDrawerBtn = document.getElementById('toggleDrawerBtn');
+  closeDrawerBtn = document.getElementById('closeDrawerBtn');
+  thumbnailGrid = document.getElementById('thumbnailGrid');
+  tabPagesBtn = document.getElementById('tabPagesBtn');
+  tabBookmarksBtn = document.getElementById('tabBookmarksBtn');
+  tabRecentsBtn = document.getElementById('tabRecentsBtn');
+  bookmarksView = document.getElementById('bookmarksView');
+  bookmarksList = document.getElementById('bookmarksList');
+  bookmarkBadgeCount = document.getElementById('bookmarkBadgeCount');
+  clearBookmarksBtn = document.getElementById('clearBookmarksBtn');
+  recentsView = document.getElementById('recentsView');
+  recentsList = document.getElementById('recentsList');
+  clearHistoryBtn = document.getElementById('clearHistoryBtn');
+  exportEpubBtn = document.getElementById('exportEpubBtn');
+  fullscreenBtn = document.getElementById('fullscreenBtn');
+  toastNotification = document.getElementById('toastNotification');
+  toastMessage = document.getElementById('toastMessage');
+}

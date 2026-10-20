@@ -204,42 +204,14 @@ export async function removeAllFromLibrary() {
   updateStorageInfo();
 }
 
-/** Load-time work, run by main.js in the original order. */
-export const steps = [
-  [
-    298,
-    () => {
-      libModal = document.createElement('div');
-    }
-  ],
-  [
-    299,
-    () => {
-      libModal.className = 'fixed inset-0 z-[60] bg-[#0E0D0B]/80 backdrop-blur-xl hidden items-center justify-center p-4';
-    }
-  ],
-  [
-    300,
-    () => {
-      libModal.setAttribute('role', 'dialog');
-    }
-  ],
-  [
-    301,
-    () => {
-      libModal.setAttribute('aria-modal', 'true');
-    }
-  ],
-  [
-    302,
-    () => {
-      libModal.setAttribute('aria-label', 'Saved books');
-    }
-  ],
-  [
-    303,
-    () => {
-      libModal.innerHTML = `<div class="max-w-md w-full glass-card rounded-3xl p-6 shadow-2xl flex flex-col max-h-[85vh]">
+/** Initialize saved books modal and management listeners. */
+export function initLibrary() {
+  libModal = document.createElement('div');
+  libModal.className = 'fixed inset-0 z-[60] bg-[#0E0D0B]/80 backdrop-blur-xl hidden items-center justify-center p-4';
+  libModal.setAttribute('role', 'dialog');
+  libModal.setAttribute('aria-modal', 'true');
+  libModal.setAttribute('aria-label', 'Saved books');
+  libModal.innerHTML = `<div class="max-w-md w-full glass-card rounded-3xl p-6 shadow-2xl flex flex-col max-h-[85vh]">
             <div class="flex justify-between items-center pb-3 border-b border-black/10 dark:border-white/10 shrink-0">
                 <h2 class="text-base font-bold">Saved books</h2>
                 <button id="closeLibBtn" aria-label="Close" class="p-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/10"><i class="fa-solid fa-xmark"></i></button>
@@ -256,70 +228,39 @@ export const steps = [
                 <button id="libRemoveFinished" class="text-xs font-bold text-apple-blue hover:underline">Remove finished</button>
                 <button id="libRemoveAll" class="text-xs font-bold text-rose-500 hover:underline">Remove all</button>
             </div></div>`;
+  document.body.appendChild(libModal);
+
+  libModal.querySelector('#closeLibBtn').addEventListener('click', closeLibraryManager);
+  libModal.addEventListener('click', (e) => {
+    if (e.target === libModal) closeLibraryManager();
+  });
+
+  libModal.querySelectorAll('[data-sort]').forEach((b) =>
+    b.addEventListener('click', () => {
+      libSort = b.dataset.sort;
+      renderLibraryManager();
+    })
+  );
+
+  libModal.querySelector('#libRemoveFinished').addEventListener('click', async () => {
+    const h = readHistory();
+    const ids = Object.keys(readLibrary()).filter((id) => h[id] && h[id].finished);
+    if (!ids.length) {
+      showToast('No finished books are kept on this device.');
+      return;
     }
-  ],
-  [
-    304,
-    () => {
-      document.body.appendChild(libModal);
-    }
-  ],
-  [
-    311,
-    () => {
-      libModal.querySelector('#closeLibBtn').addEventListener('click', closeLibraryManager);
-    }
-  ],
-  [
-    312,
-    () => {
-      libModal.addEventListener('click', (e) => {
-        if (e.target === libModal) closeLibraryManager();
-      });
-    }
-  ],
-  [
-    313,
-    () => {
-      libModal.querySelectorAll('[data-sort]').forEach((b) =>
-        b.addEventListener('click', () => {
-          libSort = b.dataset.sort;
-          renderLibraryManager();
-        })
-      );
-    }
-  ],
-  [
-    314,
-    () => {
-      libModal.querySelector('#libRemoveFinished').addEventListener('click', async () => {
-        const h = readHistory();
-        const ids = Object.keys(readLibrary()).filter((id) => h[id] && h[id].finished);
-        if (!ids.length) {
-          showToast('No finished books are kept on this device.');
-          return;
-        }
-        if (!confirm(`Remove ${ids.length} finished book${ids.length === 1 ? '' : 's'} from this device? Your progress is kept.`)) return;
-        for (const id of ids) await removeFromLibrary(id, true);
-        afterLibraryChange();
-      });
-    }
-  ],
-  [
-    315,
-    () => {
-      libModal.querySelector('#libRemoveAll').addEventListener('click', async () => {
-        await removeAllFromLibrary();
-        renderLibraryManager();
-      });
-    }
-  ],
-  [
-    316,
-    () => {
-      window.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') closeLibraryManager();
-      });
-    }
-  ]
-];
+    if (!confirm(`Remove ${ids.length} finished book${ids.length === 1 ? '' : 's'} from this device? Your progress is kept.`)) return;
+    for (const id of ids) await removeFromLibrary(id, true);
+    afterLibraryChange();
+  });
+
+  libModal.querySelector('#libRemoveAll').addEventListener('click', async () => {
+    await removeAllFromLibrary();
+    renderLibraryManager();
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeLibraryManager();
+  });
+}
+

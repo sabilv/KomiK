@@ -293,107 +293,103 @@ export function showNextBanner(key, item) {
 
 export let shelfTimer = 0;
 
-/** Load-time work, run by main.js in the original order. */
-export const steps = [
-  [
-    98,
-    () => {
-      clearHistoryBtn.addEventListener('click', () => {
-        localStorage.removeItem('comic_reader_history');
-        renderRecentsList();
-        showToast('History cleared');
-      });
-    }
-  ],
-  [
-    99,
-    () => {
-      tabPagesBtn.addEventListener('click', () => {
-        tabPagesBtn.classList.add('text-apple-blue', 'border-b-2', 'border-apple-blue');
-        tabPagesBtn.classList.remove('text-zinc-400', 'text-zinc-500');
+/** Initialize shelf tabs, search, filters, and continue reading card. */
+export function initShelf() {
+  if (clearHistoryBtn) {
+    clearHistoryBtn.addEventListener('click', () => {
+      localStorage.removeItem('comic_reader_history');
+      renderRecentsList();
+      showToast('History cleared');
+    });
+  }
+
+  if (tabPagesBtn) {
+    tabPagesBtn.addEventListener('click', () => {
+      tabPagesBtn.classList.add('text-apple-blue', 'border-b-2', 'border-apple-blue');
+      tabPagesBtn.classList.remove('text-zinc-400', 'text-zinc-500');
+      if (tabBookmarksBtn) {
         tabBookmarksBtn.classList.remove('text-apple-blue', 'border-b-2', 'border-apple-blue');
         tabBookmarksBtn.classList.add('text-zinc-400');
+      }
+      if (tabRecentsBtn) {
         tabRecentsBtn.classList.remove('text-apple-blue', 'border-b-2', 'border-apple-blue');
         tabRecentsBtn.classList.add('text-zinc-400');
+      }
 
-        thumbnailGrid.classList.remove('hidden');
+      if (thumbnailGrid) thumbnailGrid.classList.remove('hidden');
+      if (bookmarksView) {
         bookmarksView.classList.add('hidden');
         bookmarksView.classList.remove('flex');
+      }
+      if (recentsView) {
         recentsView.classList.add('hidden');
         recentsView.classList.remove('flex');
-      });
-    }
-  ],
-  [
-    101,
-    () => {
-      tabRecentsBtn.addEventListener('click', () => {
-        tabRecentsBtn.classList.add('text-apple-blue', 'border-b-2', 'border-apple-blue');
-        tabRecentsBtn.classList.remove('text-zinc-400', 'text-zinc-500');
+      }
+    });
+  }
+
+  if (tabRecentsBtn) {
+    tabRecentsBtn.addEventListener('click', () => {
+      tabRecentsBtn.classList.add('text-apple-blue', 'border-b-2', 'border-apple-blue');
+      tabRecentsBtn.classList.remove('text-zinc-400', 'text-zinc-500');
+      if (tabPagesBtn) {
         tabPagesBtn.classList.remove('text-apple-blue', 'border-b-2', 'border-apple-blue');
         tabPagesBtn.classList.add('text-zinc-400');
+      }
+      if (tabBookmarksBtn) {
         tabBookmarksBtn.classList.remove('text-apple-blue', 'border-b-2', 'border-apple-blue');
         tabBookmarksBtn.classList.add('text-zinc-400');
+      }
 
-        thumbnailGrid.classList.add('hidden');
+      if (thumbnailGrid) thumbnailGrid.classList.add('hidden');
+      if (bookmarksView) {
         bookmarksView.classList.add('hidden');
         bookmarksView.classList.remove('flex');
+      }
+      if (recentsView) {
         recentsView.classList.remove('hidden');
         recentsView.classList.add('flex');
+      }
 
+      renderRecentsList();
+    });
+  }
+
+  const exportBackupBtn = document.getElementById('exportBackupBtn');
+  if (exportBackupBtn) exportBackupBtn.addEventListener('click', exportBackup);
+
+  const importBackupBtn = document.getElementById('importBackupBtn');
+  const importFileInput = document.getElementById('importFileInput');
+  if (importBackupBtn && importFileInput) {
+    importBackupBtn.addEventListener('click', () => importFileInput.click());
+    importFileInput.addEventListener('change', (e) => {
+      if (e.target.files[0]) importBackup(e.target.files[0]);
+      e.target.value = '';
+    });
+  }
+
+  renderContinueCard();
+
+  const shelfSearch = document.getElementById('shelfSearch');
+  if (shelfSearch) {
+    shelfSearch.addEventListener('input', (e) => {
+      clearTimeout(shelfTimer);
+      shelfTimer = setTimeout(() => {
+        appState.shelfQuery = e.target.value;
         renderRecentsList();
-      });
-    }
-  ],
-  [
-    269,
-    () => {
-      document.getElementById('exportBackupBtn').addEventListener('click', exportBackup);
-    }
-  ],
-  [
-    270,
-    () => {
-      document.getElementById('importBackupBtn').addEventListener('click', () => document.getElementById('importFileInput').click());
-    }
-  ],
-  [
-    271,
-    () => {
-      document.getElementById('importFileInput').addEventListener('change', (e) => {
-        if (e.target.files[0]) importBackup(e.target.files[0]);
-        e.target.value = '';
-      });
-    }
-  ],
-  [
-    285,
-    () => {
-      renderContinueCard();
-    }
-  ],
-  [
-    318,
-    () => {
-      document.getElementById('shelfSearch').addEventListener('input', (e) => {
-        clearTimeout(shelfTimer);
-        shelfTimer = setTimeout(() => {
-          appState.shelfQuery = e.target.value;
-          renderRecentsList();
-        }, 120);
-      });
-    }
-  ],
-  [
-    319,
-    () => {
-      document.getElementById('shelfDeviceFilter').addEventListener('click', (e) => {
-        appState.shelfDevice = !appState.shelfDevice;
-        e.currentTarget.setAttribute('aria-pressed', String(appState.shelfDevice));
-        e.currentTarget.classList.toggle('bg-apple-blue', appState.shelfDevice);
-        e.currentTarget.classList.toggle('text-white', appState.shelfDevice);
-        renderRecentsList();
-      });
-    }
-  ]
-];
+      }, 120);
+    });
+  }
+
+  const shelfDeviceFilter = document.getElementById('shelfDeviceFilter');
+  if (shelfDeviceFilter) {
+    shelfDeviceFilter.addEventListener('click', (e) => {
+      appState.shelfDevice = !appState.shelfDevice;
+      e.currentTarget.setAttribute('aria-pressed', String(appState.shelfDevice));
+      e.currentTarget.classList.toggle('bg-apple-blue', appState.shelfDevice);
+      e.currentTarget.classList.toggle('text-white', appState.shelfDevice);
+      renderRecentsList();
+    });
+  }
+}
+

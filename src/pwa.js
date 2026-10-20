@@ -195,101 +195,50 @@ export async function updateStorageInfo() {
   }
 }
 
-/** Load-time work, run by main.js in the original order. */
-export const steps = [
-  [
-    291,
-    () => {
-      window.addEventListener('error', (e) =>
-        logIssue(
-          'error',
-          `${e.message} (${String(e.filename || '')
-            .split('/')
-            .pop()}:${e.lineno})`
-        )
+/** Wire up PWA features: error logging, install prompt, SW registration, wake lock. Called by main.js. */
+export function initPWA() {
+  window.addEventListener('error', (e) =>
+    logIssue(
+      'error',
+      `${e.message} (${String(e.filename || '')
+        .split('/')
+        .pop()}:${e.lineno})`
+    )
+  );
+  window.addEventListener('unhandledrejection', (e) => logIssue('promise', e.reason));
+  document.addEventListener('securitypolicyviolation', (e) => logIssue('csp', `${e.violatedDirective} blocked ${e.blockedURI}`));
+
+  isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredInstall = e;
+    syncInstallItem();
+  });
+  window.addEventListener('appinstalled', () => {
+    deferredInstall = null;
+    syncInstallItem();
+    showToast('KomiK installed');
+  });
+  document.getElementById('menuInstallBtn').addEventListener('click', async () => {
+    if (deferredInstall) {
+      deferredInstall.prompt();
+      try {
+        await deferredInstall.userChoice;
+      } catch (e) {}
+      deferredInstall = null;
+      syncInstallItem();
+    } else {
+      showToast(
+        'Tap the Share button, then Add to Home Screen. The installed app keeps its own progress, so export a backup from the Shelf first if you want to carry it over.',
+        9000
       );
     }
-  ],
-  [
-    292,
-    () => {
-      window.addEventListener('unhandledrejection', (e) => logIssue('promise', e.reason));
-    }
-  ],
-  [
-    293,
-    () => {
-      document.addEventListener('securitypolicyviolation', (e) => logIssue('csp', `${e.violatedDirective} blocked ${e.blockedURI}`));
-    }
-  ],
-  [
-    336,
-    () => {
-      isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    }
-  ],
-  [
-    338,
-    () => {
-      window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredInstall = e;
-        syncInstallItem();
-      });
-    }
-  ],
-  [
-    339,
-    () => {
-      window.addEventListener('appinstalled', () => {
-        deferredInstall = null;
-        syncInstallItem();
-        showToast('KomiK installed');
-      });
-    }
-  ],
-  [
-    340,
-    () => {
-      document.getElementById('menuInstallBtn').addEventListener('click', async () => {
-        if (deferredInstall) {
-          deferredInstall.prompt();
-          try {
-            await deferredInstall.userChoice;
-          } catch (e) {}
-          deferredInstall = null;
-          syncInstallItem();
-        } else {
-          showToast(
-            'Tap the Share button, then Add to Home Screen. The installed app keeps its own progress, so export a backup from the Shelf first if you want to carry it over.',
-            9000
-          );
-        }
-      });
-    }
-  ],
-  [
-    346,
-    () => {
-      registerSW();
-    }
-  ],
-  [
-    347,
-    () => {
-      syncInstallItem();
-    }
-  ],
-  [
-    348,
-    () => {
-      standaloneNote();
-    }
-  ],
-  [
-    370,
-    () => {
-      document.addEventListener('visibilitychange', syncWakeLock);
-    }
-  ]
-];
+  });
+
+  registerSW();
+  syncInstallItem();
+  standaloneNote();
+
+  document.addEventListener('visibilitychange', syncWakeLock);
+}

@@ -36,5 +36,4 @@ export function getPrevIndex() {
   return cur - 1;
 }
 
-/** Load-time work, run by main.js in the original order. */
-export const steps = [];
+

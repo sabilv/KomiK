@@ -328,103 +328,51 @@ export async function computeBookId(files) {
   return 'b' + total.toString(36) + '-' + (h2 >>> 0).toString(16).padStart(8, '0') + (h1 >>> 0).toString(16).padStart(8, '0');
 }
 
-/** Load-time work, run by main.js in the original order. */
-export const steps = [
-  [
-    78,
-    () => {
-      if (closeComicBtn) closeComicBtn.addEventListener('click', closeCurrentComic);
-    }
-  ],
-  [
-    79,
-    () => {
-      fileInput.addEventListener('change', (e) => handleFilesSelect(e.target.files));
-    }
-  ],
-  [
-    81,
-    () => {
-      demoComicBtn.addEventListener('click', () => generateDemoComic());
-    }
-  ],
-  [
-    242,
-    () => {
-      dropOverlay = document.createElement('div');
-    }
-  ],
-  [
-    243,
-    () => {
-      dropOverlay.className = 'fixed inset-0 z-[90] hidden items-center justify-center bg-zinc-950/70 backdrop-blur-sm pointer-events-none';
-    }
-  ],
-  [
-    244,
-    () => {
-      dropOverlay.innerHTML =
-        '<div class="glass-card rounded-3xl px-8 py-6 text-sm font-bold flex items-center space-x-3 border-2 border-dashed border-apple-blue"><i class="fa-solid fa-file-arrow-down text-apple-blue text-xl"></i><span>Drop to open comic</span></div>';
-    }
-  ],
-  [
-    245,
-    () => {
-      document.body.appendChild(dropOverlay);
-    }
-  ],
-  [
-    249,
-    () => {
-      window.addEventListener('dragenter', (e) => {
-        if (!hasFiles(e)) return;
-        e.preventDefault();
-        dragDepth++;
-        setDropOverlay(true);
-      });
-    }
-  ],
-  [
-    250,
-    () => {
-      window.addEventListener('dragover', (e) => {
-        if (!hasFiles(e)) return;
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'copy';
-      });
-    }
-  ],
-  [
-    251,
-    () => {
-      window.addEventListener('dragleave', (e) => {
-        if (!hasFiles(e)) return;
-        dragDepth = Math.max(0, dragDepth - 1);
-        if (dragDepth === 0) setDropOverlay(false);
-      });
-    }
-  ],
-  [
-    252,
-    () => {
-      window.addEventListener('drop', (e) => {
-        if (!hasFiles(e)) return;
-        e.preventDefault();
-        dragDepth = 0;
-        setDropOverlay(false);
-        if (e.dataTransfer.files.length) handleFilesSelect(e.dataTransfer.files);
-      });
-    }
-  ],
-  [
-    333,
-    () => {
-      if ('launchQueue' in window) {
-        launchQueue.setConsumer(async (params) => {
-          if (!params.files || !params.files.length) return;
-          handleFilesSelect(await Promise.all(params.files.map((h) => h.getFile())));
-        });
-      }
-    }
-  ]
-];
+/** Initialize file drag & drop, file inputs, and PWA launchQueue. */
+export function initFiles() {
+  if (closeComicBtn) closeComicBtn.addEventListener('click', closeCurrentComic);
+  if (fileInput) fileInput.addEventListener('change', (e) => handleFilesSelect(e.target.files));
+  if (demoComicBtn) demoComicBtn.addEventListener('click', () => generateDemoComic());
+
+  dropOverlay = document.createElement('div');
+  dropOverlay.className =
+    'fixed inset-0 z-[90] hidden items-center justify-center bg-zinc-950/70 backdrop-blur-sm pointer-events-none';
+  dropOverlay.innerHTML =
+    '<div class="glass-card rounded-3xl px-8 py-6 text-sm font-bold flex items-center space-x-3 border-2 border-dashed border-apple-blue"><i class="fa-solid fa-file-arrow-down text-apple-blue text-xl"></i><span>Drop to open comic</span></div>';
+  document.body.appendChild(dropOverlay);
+
+  window.addEventListener('dragenter', (e) => {
+    if (!hasFiles(e)) return;
+    e.preventDefault();
+    dragDepth++;
+    setDropOverlay(true);
+  });
+
+  window.addEventListener('dragover', (e) => {
+    if (!hasFiles(e)) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+  });
+
+  window.addEventListener('dragleave', (e) => {
+    if (!hasFiles(e)) return;
+    dragDepth = Math.max(0, dragDepth - 1);
+    if (dragDepth === 0) setDropOverlay(false);
+  });
+
+  window.addEventListener('drop', (e) => {
+    if (!hasFiles(e)) return;
+    e.preventDefault();
+    dragDepth = 0;
+    setDropOverlay(false);
+    if (e.dataTransfer.files.length) handleFilesSelect(e.dataTransfer.files);
+  });
+
+  if ('launchQueue' in window) {
+    launchQueue.setConsumer(async (params) => {
+      if (!params.files || !params.files.length) return;
+      handleFilesSelect(await Promise.all(params.files.map((h) => h.getFile())));
+    });
+  }
+}
+

@@ -389,89 +389,60 @@ export async function peekHint() {
   }
 }
 
-/** Load-time work, run by main.js in the original order. */
-export const steps = [
-  [
-    142,
-    () => {
-      curlStage = document.createElement('div');
-    }
-  ],
-  [
-    143,
-    () => {
-      curlStage.id = 'curlStage';
-    }
-  ],
-  [
-    144,
-    () => {
-      viewportContainer.appendChild(curlStage);
-    }
-  ],
-  [
-    171,
-    () => {
-      viewportContainer.addEventListener('pointerdown', (e) => {
-        activePointers.add(e.pointerId);
-        if (activePointers.size > 1) {
-          cancelSwipe();
-          return;
-        }
-        if (e.pointerType === 'mouse' && e.button !== 0) return;
-        if (e.target.closest('button, input')) return;
-        if (appState.pages.length === 0 || appState.viewMode === 'webtoon') return;
-        if (appState.zoomLevel > 1.02 || curl.running) return;
-        swipe = {
-          id: e.pointerId,
-          x0: e.clientX,
-          y0: e.clientY,
-          cx: e.clientX,
-          cy: e.clientY,
-          mode: 'pending',
-          samples: [],
-          p: 0,
-          released: false
-        };
-      });
-    }
-  ],
-  [
-    172,
-    () => {
-      viewportContainer.addEventListener('pointermove', (e) => {
-        if (!swipe || e.pointerId !== swipe.id) return;
-        if (e.pointerType === 'mouse' && e.buttons === 0) {
+/** Initialize page curl stage and viewport pointer listeners. */
+export function initCurl() {
+  curlStage = document.createElement('div');
+  curlStage.id = 'curlStage';
+  if (viewportContainer) {
+    viewportContainer.appendChild(curlStage);
+
+    viewportContainer.addEventListener('pointerdown', (e) => {
+      activePointers.add(e.pointerId);
+      if (activePointers.size > 1) {
+        cancelSwipe();
+        return;
+      }
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      if (e.target.closest('button, input')) return;
+      if (appState.pages.length === 0 || appState.viewMode === 'webtoon') return;
+      if (appState.zoomLevel > 1.02 || curl.running) return;
+      swipe = {
+        id: e.pointerId,
+        x0: e.clientX,
+        y0: e.clientY,
+        cx: e.clientX,
+        cy: e.clientY,
+        mode: 'pending',
+        samples: [],
+        p: 0,
+        released: false
+      };
+    });
+
+    viewportContainer.addEventListener('pointermove', (e) => {
+      if (!swipe || e.pointerId !== swipe.id) return;
+      if (e.pointerType === 'mouse' && e.buttons === 0) {
+        swipe = null;
+        return;
+      }
+      swipe.cx = e.clientX;
+      swipe.cy = e.clientY;
+      if (swipe.mode === 'pending') {
+        const dx = e.clientX - swipe.x0,
+          dy = e.clientY - swipe.y0;
+        if (Math.hypot(dx, dy) < 12) return;
+        if (Math.abs(dx) < Math.abs(dy) * 1.2) {
           swipe = null;
           return;
         }
-        swipe.cx = e.clientX;
-        swipe.cy = e.clientY;
-        if (swipe.mode === 'pending') {
-          const dx = e.clientX - swipe.x0,
-            dy = e.clientY - swipe.y0;
-          if (Math.hypot(dx, dy) < 12) return;
-          if (Math.abs(dx) < Math.abs(dy) * 1.2) {
-            swipe = null;
-            return;
-          }
-          startSwipeCurl(e, dx, dy);
-          return;
-        }
-        updateSwipeCurl();
-      });
-    }
-  ],
-  [
-    174,
-    () => {
-      viewportContainer.addEventListener('pointerup', endPointer);
-    }
-  ],
-  [
-    175,
-    () => {
-      viewportContainer.addEventListener('pointercancel', endPointer);
-    }
-  ]
-];
+        startSwipeCurl(e, dx, dy);
+        return;
+      }
+      updateSwipeCurl();
+    });
+
+    viewportContainer.addEventListener('pointerup', endPointer);
+    viewportContainer.addEventListener('pointercancel', endPointer);
+  }
+}
+

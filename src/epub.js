@@ -169,12 +169,7 @@ export async function exportToEPUB() {
   }
 }
 
-/** Load-time work, run by main.js in the original order. */
-export const steps = [
-  [
-    220,
-    () => {
-      exportEpubBtn.addEventListener('click', exportToEPUB);
-    }
-  ]
-];
+/** Wire up export button. Called by main.js during initialization. */
+export function initEpub() {
+  if (exportEpubBtn) exportEpubBtn.addEventListener('click', exportToEPUB);
+}

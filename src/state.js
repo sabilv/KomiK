@@ -50,42 +50,21 @@ export function saveSettings() {
   } catch (e) {}
 }
 
-/** Load-time work, run by main.js in the original order. */
-export const steps = [
-  [
-    289,
-    () => {
-      appState.errors = [];
-    }
-  ],
-  [
-    387,
-    () => {
-      document.getElementById('moreBtn').addEventListener('click', () => {
-        document.getElementById('menuGuidedBtn').querySelector('span').textContent = appState.guided
-          ? 'Guided view: On'
-          : 'Guided view (beta)';
-      });
-    }
-  ],
-  [
-    391,
-    () => {
-      try {
-        Object.assign(settings, JSON.parse(localStorage.getItem('komik_settings') || '{}'));
-      } catch (e) {}
-    }
-  ],
-  [
-    392,
-    () => {
-      settings.zoneWidth = [20, 25, 35].includes(Number(settings.zoneWidth)) ? Number(settings.zoneWidth) : 25;
-    }
-  ],
-  [
-    393,
-    () => {
-      settings.theme = settings.theme === 'classic' ? 'classic' : 'press';
-    }
-  ]
-];
+/** Initialize application state and load settings from storage. */
+export function initState() {
+  appState.errors = [];
+  try {
+    Object.assign(settings, JSON.parse(localStorage.getItem('komik_settings') || '{}'));
+  } catch (e) {}
+  settings.zoneWidth = [20, 25, 35].includes(Number(settings.zoneWidth)) ? Number(settings.zoneWidth) : 25;
+  settings.theme = settings.theme === 'classic' ? 'classic' : 'press';
+
+  const moreBtn = document.getElementById('moreBtn');
+  if (moreBtn) {
+    moreBtn.addEventListener('click', () => {
+      const guidedSpan = document.getElementById('menuGuidedBtn')?.querySelector('span');
+      if (guidedSpan) guidedSpan.textContent = appState.guided ? 'Guided view: On' : 'Guided view (beta)';
+    });
+  }
+}
+

@@ -3,22 +3,22 @@
 Plan: move KomiK from one hand-written HTML file to a small Vite project **without changing behaviour or stored data**.
 Storage keys, the IndexedDB name (`komik`), OPFS file names and the manifest stay exactly as in v1.9.5.
 
-Last updated: day 2.
+Last updated: day 3.
 
 | Area | Status | Notes |
 |---|---|---|
 | A. Foundation: Vite 5, compiled Tailwind 3.4, PostCSS, scripts, Prettier | Done | Same theme object as the old inline config; CSS order kept (preflight, custom CSS, utilities). |
-| B. Split the code into modules | Done (mechanical) | 18 modules in `src/` (see below). The split was done by a script that keeps the exact original start-up order: functions and plain data are declared in each module, everything with side effects runs from `main.js` as ordered steps. Verified by the unit tests and the smoke test on the production bundler. A second pass can turn `steps` into proper per-module `init()` functions. |
+| B. Split the code into modules | **Done** | 18 modules in `src/`. First pass: mechanical split keeping original start-up order via sorted `steps` arrays in `main.js`. Second pass (done): all `steps` arrays replaced with per-module `init()` functions; `main.js` now calls them in explicit order. Bug found during refactor: `initThemeModule()` was assigning `systemDarkModeQuery` after calling `initTheme()` — fixed by moving the assignment first. Verified: 20 unit tests + 12 smoke checks + 4 screenshot checks all pass. |
 | C. Own the dependencies | **Done** | JSZip, Font Awesome (solid + regular) and Plus Jakarta Sans are bundled; no request goes to a third party. The RAR extractor is a lazy chunk, loaded only when a `.cbr` is opened. Unused `.ttf` / `.woff` legacy font fallbacks dropped via `dropLegacyFonts` plugin in `vite.config.js`; only `.woff2` files are emitted into `dist/`, trimming >500 KB from output assets. |
 | D. Workers and service worker | **Done** | Replaced the three Blob-URL workers with dedicated worker files in `src/workers/` (`thumbnail.worker.js`, `library.worker.js`, `rar.worker.js`). Added `generate-precache` plugin in `vite.config.js` to automatically extract all emitted assets from `dist/assets/` and inject `PRECACHE_ASSETS` into `dist/sw.js` (and write `dist/precache.json`), ensuring all bundle JS, CSS, fonts, workers and WASM are precached on service worker install. |
-| E. Tests and CI | Mostly done | 20 unit tests import the real modules. Smoke test (jsdom, production bundler, strict mode) runs 12 checks and verifies zero unstyled DOM classes. Fixed Node 22.14 / undici 8.12.3 compatibility in `tests/smoke.mjs`. `ci.yml` is written. Pending: screenshot checks at 320 / 390 / 560 / 1024 px. |
+| E. Tests and CI | **Done** | 20 unit tests import the real modules. Smoke test (jsdom, production bundler, strict mode) runs 12 checks and verifies zero unstyled DOM classes. Screenshot tests (`tests/screenshots.mjs`) capture 4 viewports (320 / 390 / 560 / 1024 px) via Edge/Chromium headless and assert non-empty PNGs. Fixed Node 22.14 / undici 8.12.3 compatibility in `tests/smoke.mjs`. `ci.yml` updated with `npm run screenshots` and `v2` branch. |
 | F. CSP, docs, release | Not started | Enforce CSP after the Diagnostics count is 0 (and remove the inline `style` attributes that still need `style-src 'unsafe-inline'`); update README, release history, `VERSION` in `public/sw.js`; tag and deploy. |
 
 ## Modules
 
 | Module | Purpose |
 |---|---|
-| `main.js` | Imports the styles and every module, then runs all start-up steps in the original order. |
+| `main.js` | Imports the styles and every module, then calls each `initXxx()` function in the correct order. |
 | `state.js`, `dom.js` | Shared state and settings (no DOM), and the element lookups. |
 | `pure.js`, `paging.js` | Pure helpers and paging rules. These are what the unit tests import. |
 | `theme.js`, `ui.js`, `settingsui.js` | Appearance, shared interface helpers and dialogs, Settings. |
@@ -34,15 +34,18 @@ Last updated: day 2.
 - Replaced Blob-URL workers with native modules in `src/workers/` (`thumbnail.worker.js`, `library.worker.js`, `rar.worker.js`), which clean up CSP rules.
 - Service worker precaching is automated at build time via `generate-precache` in `vite.config.js`, injecting all hashed assets directly into `dist/sw.js`.
 - Fixed Node 22.14 / undici 8.12.3 `zlib` decompress compatibility in `tests/smoke.mjs`.
-- Production bundle: JS ~193 KB (61 KB gzip), CSS ~84 KB (24 KB gzip), plus the lazy RAR chunk and compact `.woff2` fonts.
+- During Area B refactor: `initThemeModule()` called `initTheme()` → `applyTheme()` before `systemDarkModeQuery` was assigned — order bug surfaced immediately in smoke tests, fixed by assigning the media query first.
+- Production bundle: JS ~191 KB (61 KB gzip), CSS ~84 KB (24 KB gzip), plus the lazy RAR chunk and compact `.woff2` fonts.
 - The sandbox used for development resets between sessions; keep the project in Git and re-run `npm ci`.
 
 ## Commands
 ```bash
 npm install
-npm run dev        # local server with hot reload
-npm run build      # production build in dist/
-npm test           # unit and release-consistency tests (no build needed)
-npm run smoke      # boots the app in jsdom; run after a build to also check class coverage
-npm run format     # Prettier
+npm run dev         # local server with hot reload
+npm run build       # production build in dist/
+npm test            # unit and release-consistency tests (no build needed)
+npm run smoke       # boots the app in jsdom; run after a build to also check class coverage
+npm run screenshots # headless screenshot checks at 4 viewports (needs dist/)
+npm run format      # Prettier
 ```
+

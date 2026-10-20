@@ -129,24 +129,16 @@ export function migrateLegacyKeys(totalPages) {
   } catch (e) {}
 }
 
-/** Load-time work, run by main.js in the original order. */
-export const steps = [
-  [
-    226,
-    () => {
-      document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'hidden') {
-          saveProgressNow();
-        }
-      });
+/** Initialize progress saving lifecycle listeners. */
+export function initProgress() {
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+      saveProgressNow();
     }
-  ],
-  [
-    227,
-    () => {
-      window.addEventListener('pagehide', () => {
-        saveProgressNow();
-      });
-    }
-  ]
-];
+  });
+
+  window.addEventListener('pagehide', () => {
+    saveProgressNow();
+  });
+}
+

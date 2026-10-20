@@ -141,74 +141,38 @@ export function maybeShowHints() {
   }, 900);
 }
 
-/** Load-time work, run by main.js in the original order. */
-export const steps = [
-  [
-    352,
-    () => {
-      guidedHud = document.createElement('div');
-    }
-  ],
-  [
-    353,
-    () => {
-      guidedHud.className =
-        'hidden fixed left-1/2 -translate-x-1/2 z-20 glass-pill px-3 py-1 rounded-full text-xs font-bold pointer-events-none';
-    }
-  ],
-  [
-    354,
-    () => {
-      guidedHud.style.top = 'calc(env(safe-area-inset-top, 0px) + 8px)';
-    }
-  ],
-  [
-    355,
-    () => {
-      guidedHud.setAttribute('role', 'status');
-    }
-  ],
-  [
-    356,
-    () => {
-      guidedHud.setAttribute('aria-live', 'polite');
-    }
-  ],
-  [
-    357,
-    () => {
-      document.body.appendChild(guidedHud);
-    }
-  ],
-  [
-    364,
-    () => {
-      viewportContainer.addEventListener('pointerdown', (e) => {
-        if (appState.guided && appState.zoomLevel > 1.02 && e.isPrimary && !e.target.closest('button, input'))
-          gSwipe = { x: e.clientX, y: e.clientY, t: performance.now() };
-      });
-    }
-  ],
-  [
-    365,
-    () => {
-      viewportContainer.addEventListener('pointerup', (e) => {
-        const st = gSwipe;
-        gSwipe = null;
-        if (!st || !appState.guided) return;
-        const dx = e.clientX - st.x,
-          dy = e.clientY - st.y;
-        if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5 && performance.now() - st.t < 600) {
-          appState.hasPanned = true;
-          guidedStep(dx < 0 !== appState.isRTL ? 1 : -1);
-        }
-      });
-    }
-  ],
-  [
-    386,
-    () => {
-      document.getElementById('menuGuidedBtn').addEventListener('click', () => setGuided(!appState.guided));
-    }
-  ]
-];
+/** Initialize guided view HUD and listeners. */
+export function initGuided() {
+  guidedHud = document.createElement('div');
+  guidedHud.className =
+    'hidden fixed left-1/2 -translate-x-1/2 z-20 glass-pill px-3 py-1 rounded-full text-xs font-bold pointer-events-none';
+  guidedHud.style.top = 'calc(env(safe-area-inset-top, 0px) + 8px)';
+  guidedHud.setAttribute('role', 'status');
+  guidedHud.setAttribute('aria-live', 'polite');
+  document.body.appendChild(guidedHud);
+
+  if (viewportContainer) {
+    viewportContainer.addEventListener('pointerdown', (e) => {
+      if (appState.guided && appState.zoomLevel > 1.02 && e.isPrimary && !e.target.closest('button, input'))
+        gSwipe = { x: e.clientX, y: e.clientY, t: performance.now() };
+    });
+
+    viewportContainer.addEventListener('pointerup', (e) => {
+      const st = gSwipe;
+      gSwipe = null;
+      if (!st || !appState.guided) return;
+      const dx = e.clientX - st.x,
+        dy = e.clientY - st.y;
+      if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5 && performance.now() - st.t < 600) {
+        appState.hasPanned = true;
+        guidedStep(dx < 0 !== appState.isRTL ? 1 : -1);
+      }
+    });
+  }
+
+  const menuGuidedBtn = document.getElementById('menuGuidedBtn');
+  if (menuGuidedBtn) {
+    menuGuidedBtn.addEventListener('click', () => setGuided(!appState.guided));
+  }
+}
+

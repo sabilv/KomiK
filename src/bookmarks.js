@@ -144,54 +144,50 @@ export function renderBookmarksList() {
   });
 }
 
-/** Load-time work, run by main.js in the original order. */
-export const steps = [
-  [
-    92,
-    () => {
-      bookmarkBtn.addEventListener('click', toggleBookmark);
-    }
-  ],
-  [
-    93,
-    () => {
-      clearBookmarksBtn.addEventListener('click', () => {
-        const key = getBookKey();
-        if (key && appState.bookmarks[key]) {
-          delete appState.bookmarks[key];
-          saveBookmarksToStorage();
-          updateBookmarkButton();
-          renderBookmarksList();
-          showToast('All bookmarks cleared for this book');
-        }
-      });
-    }
-  ],
-  [
-    100,
-    () => {
-      tabBookmarksBtn.addEventListener('click', () => {
-        tabBookmarksBtn.classList.add('text-apple-blue', 'border-b-2', 'border-apple-blue');
-        tabBookmarksBtn.classList.remove('text-zinc-400', 'text-zinc-500');
+/** Initialize bookmark buttons, tabs, and load saved bookmarks. */
+export function initBookmarks() {
+  if (bookmarkBtn) bookmarkBtn.addEventListener('click', toggleBookmark);
+
+  if (clearBookmarksBtn) {
+    clearBookmarksBtn.addEventListener('click', () => {
+      const key = getBookKey();
+      if (key && appState.bookmarks[key]) {
+        delete appState.bookmarks[key];
+        saveBookmarksToStorage();
+        updateBookmarkButton();
+        renderBookmarksList();
+        showToast('All bookmarks cleared for this book');
+      }
+    });
+  }
+
+  if (tabBookmarksBtn) {
+    tabBookmarksBtn.addEventListener('click', () => {
+      tabBookmarksBtn.classList.add('text-apple-blue', 'border-b-2', 'border-apple-blue');
+      tabBookmarksBtn.classList.remove('text-zinc-400', 'text-zinc-500');
+      if (tabPagesBtn) {
         tabPagesBtn.classList.remove('text-apple-blue', 'border-b-2', 'border-apple-blue');
         tabPagesBtn.classList.add('text-zinc-400');
+      }
+      if (tabRecentsBtn) {
         tabRecentsBtn.classList.remove('text-apple-blue', 'border-b-2', 'border-apple-blue');
         tabRecentsBtn.classList.add('text-zinc-400');
+      }
 
-        thumbnailGrid.classList.add('hidden');
+      if (thumbnailGrid) thumbnailGrid.classList.add('hidden');
+      if (bookmarksView) {
         bookmarksView.classList.remove('hidden');
         bookmarksView.classList.add('flex');
+      }
+      if (recentsView) {
         recentsView.classList.add('hidden');
         recentsView.classList.remove('flex');
+      }
 
-        renderBookmarksList();
-      });
-    }
-  ],
-  [
-    429,
-    () => {
-      loadBookmarksFromStorage();
-    }
-  ]
-];
+      renderBookmarksList();
+    });
+  }
+
+  loadBookmarksFromStorage();
+}
+

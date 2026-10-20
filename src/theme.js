@@ -41,46 +41,34 @@ export function applyTheme() {
   }
 }
 
-/** Load-time work, run by main.js in the original order. */
-export const steps = [
-  [
-    69,
-    () => {
-      window.addEventListener('DOMContentLoaded', () => {
-        initTheme();
-        setTimeout(() => {
-          if (splashScreen) {
-            splashScreen.classList.add('opacity-0', 'pointer-events-none');
-            setTimeout(() => {
-              splashScreen.style.display = 'none';
-            }, 500);
-          }
-        }, 1200);
-      });
+/** Initialize theme settings, system query, and toggle listener. */
+export function initThemeModule() {
+  // Assign before initTheme() so applyTheme() can read .matches.
+  systemDarkModeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+  initTheme();
+  setTimeout(() => {
+    if (splashScreen) {
+      splashScreen.classList.add('opacity-0', 'pointer-events-none');
+      setTimeout(() => {
+        splashScreen.style.display = 'none';
+      }, 500);
     }
-  ],
-  [
-    70,
-    () => {
-      systemDarkModeQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    }
-  ],
-  [
-    73,
-    () => {
-      themeModeBtn.addEventListener('click', () => {
-        if (appState.themeMode === 'auto') {
-          appState.themeMode = 'dark';
-        } else if (appState.themeMode === 'dark') {
-          appState.themeMode = 'light';
-        } else {
-          appState.themeMode = 'auto';
-        }
+  }, 1200);
 
-        localStorage.setItem('komik_theme_preference', appState.themeMode);
-        applyTheme();
-        showToast(`Theme: ${appState.themeMode.toUpperCase()}`);
-      });
-    }
-  ]
-];
+  if (themeModeBtn) {
+    themeModeBtn.addEventListener('click', () => {
+      if (appState.themeMode === 'auto') {
+        appState.themeMode = 'dark';
+      } else if (appState.themeMode === 'dark') {
+        appState.themeMode = 'light';
+      } else {
+        appState.themeMode = 'auto';
+      }
+
+      localStorage.setItem('komik_theme_preference', appState.themeMode);
+      applyTheme();
+      showToast(`Theme: ${appState.themeMode.toUpperCase()}`);
+    });
+  }
+}
+

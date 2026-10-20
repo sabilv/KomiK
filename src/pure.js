@@ -231,5 +231,4 @@ export function parseComicInfo(xml) {
   }
 }
 
-/** Load-time work, run by main.js in the original order. */
-export const steps = [];
+

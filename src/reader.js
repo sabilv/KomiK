@@ -553,348 +553,239 @@ export function applyBookPrefs() {
   syncControls();
 }
 
-/** Load-time work, run by main.js in the original order. */
-export const steps = [
-  [
-    178,
-    () => {
-      pageSlider.addEventListener('input', (e) => {
-        updateSliderPreview(e.target.value);
-        scheduleSliderGo(parseInt(e.target.value, 10) - 1);
-      });
-    }
-  ],
-  [
-    179,
-    () => {
-      pageSlider.addEventListener('change', hideSliderPreview);
-    }
-  ],
-  [
-    180,
-    () => {
-      pageSlider.addEventListener('mouseleave', hideSliderPreview);
-    }
-  ],
-  [
-    181,
-    () => {
-      pageSlider.addEventListener('touchend', hideSliderPreview);
-    }
-  ],
-  [
-    190,
-    () => {
-      viewportContainer.addEventListener('click', (e) => {
-        if (e.target.closest('button') || e.target.closest('input') || appState.hasPanned) return;
-        const rect = viewportContainer.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const zoomed = appState.zoomLevel > 1.02 && !appState.guided;
-        const zw = settings.zoneWidth / 100;
-        if (!zoomed && !(x > rect.width * zw && x < rect.width * (1 - zw))) return;
-        if (appState.viewMode === 'webtoon' || appState.guided) {
-          toggleUI();
-          return;
-        }
+/** Initialize reader event listeners and keyboard shortcuts. */
+export function initReader() {
+  if (pageSlider) {
+    pageSlider.addEventListener('input', (e) => {
+      updateSliderPreview(e.target.value);
+      scheduleSliderGo(parseInt(e.target.value, 10) - 1);
+    });
+    pageSlider.addEventListener('change', hideSliderPreview);
+    pageSlider.addEventListener('mouseleave', hideSliderPreview);
+    pageSlider.addEventListener('touchend', hideSliderPreview);
+  }
 
-        const now = Date.now();
-        clearTimeout(uiToggleTimer);
-        if (now - lastTap.t < 260 && Math.hypot(e.clientX - lastTap.x, e.clientY - lastTap.y) < 40) {
-          lastTap.t = 0;
-          toggleZoomAt(e.clientX, e.clientY);
-          return;
-        }
-        lastTap = { t: now, x: e.clientX, y: e.clientY };
-        uiToggleTimer = setTimeout(toggleUI, 260);
-      });
-    }
-  ],
-  [
-    193,
-    () => {
-      viewportContainer.addEventListener(
-        'wheel',
-        (e) => {
-          if (appState.viewMode === 'webtoon') return;
-          e.preventDefault();
-          if (!e.ctrlKey) {
-            if (appState.zoomLevel > 1.02) {
-              appState.panX -= e.deltaX;
-              appState.panY -= e.deltaY;
-              applyTransform(false);
-            }
-            return;
-          }
-          const rect = viewportContainer.getBoundingClientRect();
-          const mx = e.clientX - (rect.left + rect.width / 2);
-          const my = e.clientY - (rect.top + rect.height / 2);
-          const oldZoom = appState.zoomLevel;
-          const step = Math.max(-30, Math.min(30, e.deltaY));
-          const newZoom = Math.min(Math.max(1, oldZoom * Math.exp(-step * 0.01)), 4.0);
-          if (newZoom === oldZoom) return;
-          appState.panX = mx - (mx - appState.panX) * (newZoom / oldZoom);
-          appState.panY = my - (my - appState.panY) * (newZoom / oldZoom);
-          appState.zoomLevel = newZoom;
-          applyTransform(false);
-        },
-        { passive: false }
-      );
-    }
-  ],
-  [
-    194,
-    () => {
-      viewportContainer.addEventListener('mousedown', (e) => {
-        if (e.target.closest('button') || e.target.closest('input')) return;
+  if (viewportContainer) {
+    viewportContainer.addEventListener('click', (e) => {
+      if (e.target.closest('button') || e.target.closest('input') || appState.hasPanned) return;
+      const rect = viewportContainer.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const zoomed = appState.zoomLevel > 1.02 && !appState.guided;
+      const zw = settings.zoneWidth / 100;
+      if (!zoomed && !(x > rect.width * zw && x < rect.width * (1 - zw))) return;
+      if (appState.viewMode === 'webtoon' || appState.guided) {
+        toggleUI();
+        return;
+      }
 
-        appState.isDragging = true;
-        appState.hasPanned = false;
-        appState.dragStart = { x: e.clientX, y: e.clientY };
-        appState.panStart = { x: appState.panX, y: appState.panY };
+      const now = Date.now();
+      clearTimeout(uiToggleTimer);
+      if (now - lastTap.t < 260 && Math.hypot(e.clientX - lastTap.x, e.clientY - lastTap.y) < 40) {
+        lastTap.t = 0;
+        toggleZoomAt(e.clientX, e.clientY);
+        return;
+      }
+      lastTap = { t: now, x: e.clientX, y: e.clientY };
+      uiToggleTimer = setTimeout(toggleUI, 260);
+    });
 
-        if (appState.zoomLevel > 1.02) {
-          viewportContainer.style.cursor = 'grabbing';
-        }
-      });
-    }
-  ],
-  [
-    195,
-    () => {
-      window.addEventListener('mousemove', (e) => {
-        if (!appState.isDragging) return;
-
-        const dx = e.clientX - appState.dragStart.x;
-        const dy = e.clientY - appState.dragStart.y;
-
-        if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
-          appState.hasPanned = true;
-        }
-
-        if (appState.zoomLevel > 1.0 || appState.fitMode === 'width') {
-          appState.panX = appState.panStart.x + dx;
-          appState.panY = appState.panStart.y + dy;
-          applyTransform(false);
-        }
-      });
-    }
-  ],
-  [
-    196,
-    () => {
-      window.addEventListener('mouseup', () => {
-        if (appState.isDragging) {
-          appState.isDragging = false;
+    viewportContainer.addEventListener(
+      'wheel',
+      (e) => {
+        if (appState.viewMode === 'webtoon') return;
+        e.preventDefault();
+        if (!e.ctrlKey) {
           if (appState.zoomLevel > 1.02) {
-            viewportContainer.style.cursor = 'grab';
-          }
-        }
-      });
-    }
-  ],
-  [
-    197,
-    () => {
-      viewportContainer.addEventListener(
-        'touchstart',
-        (e) => {
-          if (e.touches.length === 2) {
-            const t1 = e.touches[0];
-            const t2 = e.touches[1];
-            appState.pinchDist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
-          } else if (e.touches.length === 1) {
-            appState.isDragging = true;
-            appState.hasPanned = false;
-            appState.dragStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-            appState.panStart = { x: appState.panX, y: appState.panY };
-          }
-        },
-        { passive: true }
-      );
-    }
-  ],
-  [
-    198,
-    () => {
-      viewportContainer.addEventListener(
-        'touchmove',
-        (e) => {
-          if (e.touches.length === 2) {
-            const t1 = e.touches[0];
-            const t2 = e.touches[1];
-            const dist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
-            if (appState.pinchDist > 0) {
-              const factor = dist / appState.pinchDist;
-              appState.zoomLevel = Math.min(Math.max(1, appState.zoomLevel * factor), 4.0);
-              applyTransform(false);
-            }
-            appState.pinchDist = dist;
-          } else if (e.touches.length === 1 && appState.isDragging && appState.zoomLevel > 1.0) {
-            const dx = e.touches[0].clientX - appState.dragStart.x;
-            const dy = e.touches[0].clientY - appState.dragStart.y;
-            if (Math.abs(dx) > 5 || Math.abs(dy) > 5) appState.hasPanned = true;
-
-            appState.panX = appState.panStart.x + dx;
-            appState.panY = appState.panStart.y + dy;
-            const over = edgeOvershoot();
-            if (!appState.edgeTurned && !appState.guided && Math.abs(over) > 80) {
-              appState.edgeTurned = true;
-              turnFromEdge(over);
-              return;
-            }
+            appState.panX -= e.deltaX;
+            appState.panY -= e.deltaY;
             applyTransform(false);
           }
-        },
-        { passive: true }
-      );
-    }
-  ],
-  [
-    199,
-    () => {
-      viewportContainer.addEventListener('touchend', () => {
-        appState.pinchDist = 0;
-        appState.isDragging = false;
-        appState.edgeTurned = false;
-      });
-    }
-  ],
-  [
-    200,
-    () => {
-      zonePrev.addEventListener('click', () => {
-        if (appState.hasPanned || (appState.zoomLevel > 1.02 && !appState.guided)) return;
-        appState.isRTL !== settings.swapZones ? nextPage() : prevPage();
-      });
-    }
-  ],
-  [
-    201,
-    () => {
-      zoneNext.addEventListener('click', () => {
-        if (appState.hasPanned || (appState.zoomLevel > 1.02 && !appState.guided)) return;
-        appState.isRTL !== settings.swapZones ? prevPage() : nextPage();
-      });
-    }
-  ],
-  [
-    202,
-    () => {
-      fitPageBtn.addEventListener('click', () => setFitMode('page'));
-    }
-  ],
-  [
-    203,
-    () => {
-      fitWidthBtn.addEventListener('click', () => setFitMode('width'));
-    }
-  ],
-  [
-    205,
-    () => {
-      zoomInBtn.addEventListener('click', () => adjustZoom(0.2));
-    }
-  ],
-  [
-    206,
-    () => {
-      zoomOutBtn.addEventListener('click', () => adjustZoom(-0.2));
-    }
-  ],
-  [
-    207,
-    () => {
-      zoomResetBtn.addEventListener('click', () => resetZoomAndPan(true));
-    }
-  ],
-  [
-    208,
-    () => {
-      hudResetBtn.addEventListener('click', () => resetZoomAndPan(true));
-    }
-  ],
-  [
-    210,
-    () => {
-      modeSingleBtn.addEventListener('click', () => setViewMode('single'));
-    }
-  ],
-  [
-    211,
-    () => {
-      modeDoubleBtn.addEventListener('click', () => setViewMode('double'));
-    }
-  ],
-  [
-    212,
-    () => {
-      modeWebtoonBtn.addEventListener('click', () => setViewMode('webtoon'));
-    }
-  ],
-  [
-    215,
-    () => {
-      prevPageBtn.addEventListener('click', prevPage);
-    }
-  ],
-  [
-    216,
-    () => {
-      nextPageBtn.addEventListener('click', nextPage);
-    }
-  ],
-  [
-    217,
-    () => {
-      pageInput.addEventListener('change', (e) => {
-        const v = parseInt(e.target.value, 10);
-        if (Number.isNaN(v)) updatePageCounter();
-        else goToPage(v - 1);
-      });
-    }
-  ],
-  [
-    225,
-    () => {
-      window.addEventListener('keydown', (e) => {
-        if (e.target.tagName === 'INPUT') return;
-
-        switch (e.key) {
-          case 'ArrowRight':
-          case 'd':
-          case 'D':
-          case ' ':
-            appState.isRTL ? prevPage() : nextPage();
-            break;
-          case 'ArrowLeft':
-          case 'a':
-          case 'A':
-            appState.isRTL ? nextPage() : prevPage();
-            break;
-          case 'f':
-          case 'F':
-            fullscreenBtn.click();
-            break;
-          case 't':
-          case 'T':
-            toggleDrawer();
-            break;
-          case 'b':
-          case 'B':
-            toggleBookmark();
-            break;
-          case '+':
-          case '=':
-            adjustZoom(0.2);
-            break;
-          case '-':
-            adjustZoom(-0.2);
-            break;
-          case '0':
-            resetZoomAndPan(true);
-            break;
+          return;
         }
-      });
+        const rect = viewportContainer.getBoundingClientRect();
+        const mx = e.clientX - (rect.left + rect.width / 2);
+        const my = e.clientY - (rect.top + rect.height / 2);
+        const oldZoom = appState.zoomLevel;
+        const step = Math.max(-30, Math.min(30, e.deltaY));
+        const newZoom = Math.min(Math.max(1, oldZoom * Math.exp(-step * 0.01)), 4.0);
+        if (newZoom === oldZoom) return;
+        appState.panX = mx - (mx - appState.panX) * (newZoom / oldZoom);
+        appState.panY = my - (my - appState.panY) * (newZoom / oldZoom);
+        appState.zoomLevel = newZoom;
+        applyTransform(false);
+      },
+      { passive: false }
+    );
+
+    viewportContainer.addEventListener('mousedown', (e) => {
+      if (e.target.closest('button') || e.target.closest('input')) return;
+
+      appState.isDragging = true;
+      appState.hasPanned = false;
+      appState.dragStart = { x: e.clientX, y: e.clientY };
+      appState.panStart = { x: appState.panX, y: appState.panY };
+
+      if (appState.zoomLevel > 1.02) {
+        viewportContainer.style.cursor = 'grabbing';
+      }
+    });
+
+    viewportContainer.addEventListener(
+      'touchstart',
+      (e) => {
+        if (e.touches.length === 2) {
+          const t1 = e.touches[0];
+          const t2 = e.touches[1];
+          appState.pinchDist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+        } else if (e.touches.length === 1) {
+          appState.isDragging = true;
+          appState.hasPanned = false;
+          appState.dragStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+          appState.panStart = { x: appState.panX, y: appState.panY };
+        }
+      },
+      { passive: true }
+    );
+
+    viewportContainer.addEventListener(
+      'touchmove',
+      (e) => {
+        if (e.touches.length === 2) {
+          const t1 = e.touches[0];
+          const t2 = e.touches[1];
+          const dist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+          if (appState.pinchDist > 0) {
+            const factor = dist / appState.pinchDist;
+            appState.zoomLevel = Math.min(Math.max(1, appState.zoomLevel * factor), 4.0);
+            applyTransform(false);
+          }
+          appState.pinchDist = dist;
+        } else if (e.touches.length === 1 && appState.isDragging && appState.zoomLevel > 1.0) {
+          const dx = e.touches[0].clientX - appState.dragStart.x;
+          const dy = e.touches[0].clientY - appState.dragStart.y;
+          if (Math.abs(dx) > 5 || Math.abs(dy) > 5) appState.hasPanned = true;
+
+          appState.panX = appState.panStart.x + dx;
+          appState.panY = appState.panStart.y + dy;
+          const over = edgeOvershoot();
+          if (!appState.edgeTurned && !appState.guided && Math.abs(over) > 80) {
+            appState.edgeTurned = true;
+            turnFromEdge(over);
+            return;
+          }
+          applyTransform(false);
+        }
+      },
+      { passive: true }
+    );
+
+    viewportContainer.addEventListener('touchend', () => {
+      appState.pinchDist = 0;
+      appState.isDragging = false;
+      appState.edgeTurned = false;
+    });
+  }
+
+  window.addEventListener('mousemove', (e) => {
+    if (!appState.isDragging) return;
+
+    const dx = e.clientX - appState.dragStart.x;
+    const dy = e.clientY - appState.dragStart.y;
+
+    if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+      appState.hasPanned = true;
     }
-  ]
-];
+
+    if (appState.zoomLevel > 1.0 || appState.fitMode === 'width') {
+      appState.panX = appState.panStart.x + dx;
+      appState.panY = appState.panStart.y + dy;
+      applyTransform(false);
+    }
+  });
+
+  window.addEventListener('mouseup', () => {
+    if (appState.isDragging) {
+      appState.isDragging = false;
+      if (appState.zoomLevel > 1.02) {
+        viewportContainer.style.cursor = 'grab';
+      }
+    }
+  });
+
+  if (zonePrev) {
+    zonePrev.addEventListener('click', () => {
+      if (appState.hasPanned || (appState.zoomLevel > 1.02 && !appState.guided)) return;
+      appState.isRTL !== settings.swapZones ? nextPage() : prevPage();
+    });
+  }
+
+  if (zoneNext) {
+    zoneNext.addEventListener('click', () => {
+      if (appState.hasPanned || (appState.zoomLevel > 1.02 && !appState.guided)) return;
+      appState.isRTL !== settings.swapZones ? prevPage() : nextPage();
+    });
+  }
+
+  if (fitPageBtn) fitPageBtn.addEventListener('click', () => setFitMode('page'));
+  if (fitWidthBtn) fitWidthBtn.addEventListener('click', () => setFitMode('width'));
+  if (zoomInBtn) zoomInBtn.addEventListener('click', () => adjustZoom(0.2));
+  if (zoomOutBtn) zoomOutBtn.addEventListener('click', () => adjustZoom(-0.2));
+  if (zoomResetBtn) zoomResetBtn.addEventListener('click', () => resetZoomAndPan(true));
+  if (hudResetBtn) hudResetBtn.addEventListener('click', () => resetZoomAndPan(true));
+
+  if (modeSingleBtn) modeSingleBtn.addEventListener('click', () => setViewMode('single'));
+  if (modeDoubleBtn) modeDoubleBtn.addEventListener('click', () => setViewMode('double'));
+  if (modeWebtoonBtn) modeWebtoonBtn.addEventListener('click', () => setViewMode('webtoon'));
+
+  if (prevPageBtn) prevPageBtn.addEventListener('click', prevPage);
+  if (nextPageBtn) nextPageBtn.addEventListener('click', nextPage);
+
+  if (pageInput) {
+    pageInput.addEventListener('change', (e) => {
+      const v = parseInt(e.target.value, 10);
+      if (Number.isNaN(v)) updatePageCounter();
+      else goToPage(v - 1);
+    });
+  }
+
+  window.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT') return;
+
+    switch (e.key) {
+      case 'ArrowRight':
+      case 'd':
+      case 'D':
+      case ' ':
+        appState.isRTL ? prevPage() : nextPage();
+        break;
+      case 'ArrowLeft':
+      case 'a':
+      case 'A':
+        appState.isRTL ? nextPage() : prevPage();
+        break;
+      case 'f':
+      case 'F':
+        if (fullscreenBtn) fullscreenBtn.click();
+        break;
+      case 't':
+      case 'T':
+        toggleDrawer();
+        break;
+      case 'b':
+      case 'B':
+        toggleBookmark();
+        break;
+      case '+':
+      case '=':
+        adjustZoom(0.2);
+        break;
+      case '-':
+        adjustZoom(-0.2);
+        break;
+      case '0':
+        resetZoomAndPan(true);
+        break;
+    }
+  });
+}
+

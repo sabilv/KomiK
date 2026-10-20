@@ -203,5 +203,4 @@ export function thumbInWorker(blob) {
   });
 }
 
-/** Load-time work, run by main.js in the original order. */
-export const steps = [];
+
