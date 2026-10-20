@@ -8,10 +8,10 @@ Last updated: day 2.
 | Area | Status | Notes |
 |---|---|---|
 | A. Foundation: Vite 5, compiled Tailwind 3.4, PostCSS, scripts, Prettier | Done | Same theme object as the old inline config; CSS order kept (preflight, custom CSS, utilities). |
-| B. Split the code into modules | **Done (mechanical)** | 18 modules in `src/` (see below). The split was done by a script that keeps the exact original start-up order: functions and plain data are declared in each module, everything with side effects runs from `main.js` as ordered steps. Verified by the unit tests and the smoke test on the production bundler. A second pass can turn `steps` into proper per-module `init()` functions. |
-| C. Own the dependencies | Done (trim pending) | JSZip, Font Awesome (solid + regular) and Plus Jakarta Sans are bundled; no request goes to a third party. The RAR extractor is a lazy chunk, loaded only when a `.cbr` is opened. Pending: drop the unused `.ttf` / `.woff` fallbacks (about 400 KB of files in `dist` that modern browsers never request). |
-| D. Workers and service worker | Not started | Replace the three Blob workers (RAR, thumbnails, library writes) with real worker files, and generate a precache list from the build so the service worker precaches the hashed files. The interim offline check only looks for the app's own `.js` and `.css`. |
-| E. Tests and CI | Mostly done | 20 unit tests now import the real modules (no more text extraction). Smoke test (jsdom, production bundler, strict mode) runs 12 checks: boot, sample comic, next page, spread, Shelf, Settings, saved-books manager, page turn with the curl, Shelf search, shortcut help, and fails on any error or any class without a CSS rule. `ci.yml` is written but has not run on GitHub yet. Pending: screenshot checks at 320 / 390 / 560 / 1024 px. |
+| B. Split the code into modules | Done (mechanical) | 18 modules in `src/` (see below). The split was done by a script that keeps the exact original start-up order: functions and plain data are declared in each module, everything with side effects runs from `main.js` as ordered steps. Verified by the unit tests and the smoke test on the production bundler. A second pass can turn `steps` into proper per-module `init()` functions. |
+| C. Own the dependencies | **Done** | JSZip, Font Awesome (solid + regular) and Plus Jakarta Sans are bundled; no request goes to a third party. The RAR extractor is a lazy chunk, loaded only when a `.cbr` is opened. Unused `.ttf` / `.woff` legacy font fallbacks dropped via `dropLegacyFonts` plugin in `vite.config.js`; only `.woff2` files are emitted into `dist/`, trimming >500 KB from output assets. |
+| D. Workers and service worker | **Done** | Replaced the three Blob-URL workers with dedicated worker files in `src/workers/` (`thumbnail.worker.js`, `library.worker.js`, `rar.worker.js`). Added `generate-precache` plugin in `vite.config.js` to automatically extract all emitted assets from `dist/assets/` and inject `PRECACHE_ASSETS` into `dist/sw.js` (and write `dist/precache.json`), ensuring all bundle JS, CSS, fonts, workers and WASM are precached on service worker install. |
+| E. Tests and CI | Mostly done | 20 unit tests import the real modules. Smoke test (jsdom, production bundler, strict mode) runs 12 checks and verifies zero unstyled DOM classes. Fixed Node 22.14 / undici 8.12.3 compatibility in `tests/smoke.mjs`. `ci.yml` is written. Pending: screenshot checks at 320 / 390 / 560 / 1024 px. |
 | F. CSP, docs, release | Not started | Enforce CSP after the Diagnostics count is 0 (and remove the inline `style` attributes that still need `style-src 'unsafe-inline'`); update README, release history, `VERSION` in `public/sw.js`; tag and deploy. |
 
 ## Modules
@@ -30,7 +30,11 @@ Last updated: day 2.
 ## Findings so far
 - Three old bugs found by the compiled-CSS check: two invalid Tailwind classes (`py-0.2`, `sm:w-88`; no visual change when removed) and `fa-sparkles` (Pro-only icon, so the Try Sample button never had an icon). The last one now uses `fa-wand-magic-sparkles`.
 - Plus Jakarta Sans stops at weight 800, so `font-black` (900) was already rendered as 800 before.
-- Production bundle: JS 195 KB (62 KB gzip), CSS 103 KB (25 KB gzip), plus the lazy RAR chunk.
+- Dropped unused `.ttf` and `.woff` fallbacks: shaved >500 KB from `dist/assets/`, leaving only modern `.woff2` font files.
+- Replaced Blob-URL workers with native modules in `src/workers/` (`thumbnail.worker.js`, `library.worker.js`, `rar.worker.js`), which clean up CSP rules.
+- Service worker precaching is automated at build time via `generate-precache` in `vite.config.js`, injecting all hashed assets directly into `dist/sw.js`.
+- Fixed Node 22.14 / undici 8.12.3 `zlib` decompress compatibility in `tests/smoke.mjs`.
+- Production bundle: JS ~193 KB (61 KB gzip), CSS ~84 KB (24 KB gzip), plus the lazy RAR chunk and compact `.woff2` fonts.
 - The sandbox used for development resets between sessions; keep the project in Git and re-run `npm ci`.
 
 ## Commands

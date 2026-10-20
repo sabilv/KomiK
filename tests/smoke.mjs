@@ -5,8 +5,19 @@ import { readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import assert from 'node:assert/strict';
+import zlib from 'node:zlib';
 import { build as viteBuild } from 'vite';
-import { JSDOM } from 'jsdom';
+
+// Node 22.14 compatibility workaround for undici 8.12.x
+if (!zlib.createZstdDecompress) {
+  zlib.createZstdDecompress = () => {};
+  try {
+    zlib.constants.ZSTD_d_windowLogMax = 0;
+  } catch {
+    Object.defineProperty(zlib.constants, 'ZSTD_d_windowLogMax', { value: 0, configurable: true });
+  }
+}
+const { JSDOM } = await import('jsdom');
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 // Same bundler and module order as the production build, but as one script jsdom can run.

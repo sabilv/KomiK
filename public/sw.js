@@ -4,6 +4,7 @@ const CORE = `komik-core-${VERSION}`;
 const RUNTIME = 'komik-runtime';
 const CORE_REQUIRED = ['./'];
 const CORE_OPTIONAL = ['manifest.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'favicon-32.png'];
+const PRECACHE_ASSETS = [];
 const CDN_HOSTS = ['cdn.tailwindcss.com', 'cdnjs.cloudflare.com', 'fonts.googleapis.com', 'fonts.gstatic.com'];
 const CDN_PRELOAD = [
   'https://cdn.tailwindcss.com/',
@@ -17,6 +18,9 @@ self.addEventListener('install', (event) => {
     const core = await caches.open(CORE);
     await core.addAll(CORE_REQUIRED.map(u => new Request(u, { cache: 'reload' })));
     await Promise.allSettled(CORE_OPTIONAL.map(u => core.add(new Request(u, { cache: 'reload' }))));
+    if (PRECACHE_ASSETS.length > 0) {
+      await Promise.allSettled(PRECACHE_ASSETS.map(u => core.add(new Request(u, { cache: 'reload' }))));
+    }
     const runtime = await caches.open(RUNTIME);
     await Promise.allSettled(CDN_PRELOAD.map(async (u) => runtime.put(u, await fetch(u, { mode: 'no-cors' }))));
   })());

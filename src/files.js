@@ -134,11 +134,8 @@ export async function parseCBZ(file) {
 
 export async function parseRAR(file) {
   showLoading(true, 'Reading RAR archive...');
-  const [{ default: rarSrc }, { default: rarB64 }] = await Promise.all([
-    import('./assets/rar-worker.txt?raw'),
-    import('./assets/unrar-wasm-b64.txt?raw')
-  ]);
-  const w = new Worker(URL.createObjectURL(new Blob([rarSrc], { type: 'text/javascript' })));
+  const { default: rarB64 } = await import('./assets/unrar-wasm-b64.txt?raw');
+  const w = new Worker(new URL('./workers/rar.worker.js', import.meta.url), { type: 'module' });
   const pending = new Map();
   let seq = 0;
   const call = (msg, tr) =>

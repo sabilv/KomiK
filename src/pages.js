@@ -182,9 +182,7 @@ export let thumbSeq = 0;
 export function thumbInWorker(blob) {
   if (!window.Worker || typeof OffscreenCanvas === 'undefined') return Promise.resolve(null);
   if (!thumbWorker) {
-    const code =
-      "self.onmessage=async e=>{const {id,blob}=e.data;try{const b=await createImageBitmap(blob);const k=Math.min(1,240/b.width);const w=Math.max(1,Math.round(b.width*k)),h=Math.max(1,Math.round(b.height*k));const c=new OffscreenCanvas(w,h);c.getContext('2d').drawImage(b,0,0,w,h);if(b.close)b.close();const out=await c.convertToBlob({type:'image/jpeg',quality:0.7});self.postMessage({id,blob:out});}catch(err){self.postMessage({id,error:1});}};";
-    thumbWorker = new Worker(URL.createObjectURL(new Blob([code], { type: 'text/javascript' })));
+    thumbWorker = new Worker(new URL('./workers/thumbnail.worker.js', import.meta.url), { type: 'module' });
     thumbWorker.onmessage = (e) => {
       const r = thumbPending.get(e.data.id);
       if (r) {
