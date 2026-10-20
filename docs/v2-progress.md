@@ -1,43 +1,65 @@
-# v2.0.0 progress
+# v2.0.0 & v2.5 Progress
 
-Plan: move KomiK from one hand-written HTML file to a small Vite project **without changing behaviour or stored data**.
-Storage keys, the IndexedDB name (`komik`), OPFS file names and the manifest stay exactly as in v1.9.5.
+Plan: move KomiK from one hand-written HTML file to a small Vite project **without changing behaviour or stored data**, followed by modernising the storage architecture with IndexedDB.
 
-Last updated: day 3.
+Last updated: day 3 (v2.5 in progress).
+
+---
+
+## v2.0.0 Status (Shipped & Merged to `main`)
 
 | Area | Status | Notes |
 |---|---|---|
-| A. Foundation: Vite 5, compiled Tailwind 3.4, PostCSS, scripts, Prettier | Done | Same theme object as the old inline config; CSS order kept (preflight, custom CSS, utilities). |
-| B. Split the code into modules | **Done** | 18 modules in `src/`. First pass: mechanical split keeping original start-up order via sorted `steps` arrays in `main.js`. Second pass (done): all `steps` arrays replaced with per-module `init()` functions; `main.js` now calls them in explicit order. Bug found during refactor: `initThemeModule()` was assigning `systemDarkModeQuery` after calling `initTheme()` — fixed by moving the assignment first. Verified: 20 unit tests + 12 smoke checks + 4 screenshot checks all pass. |
-| C. Own the dependencies | **Done** | JSZip, Font Awesome (solid + regular) and Plus Jakarta Sans are bundled; no request goes to a third party. The RAR extractor is a lazy chunk, loaded only when a `.cbr` is opened. Unused `.ttf` / `.woff` legacy font fallbacks dropped via `dropLegacyFonts` plugin in `vite.config.js`; only `.woff2` files are emitted into `dist/`, trimming >500 KB from output assets. |
-| D. Workers and service worker | **Done** | Replaced the three Blob-URL workers with dedicated worker files in `src/workers/` (`thumbnail.worker.js`, `library.worker.js`, `rar.worker.js`). Added `generate-precache` plugin in `vite.config.js` to automatically extract all emitted assets from `dist/assets/` and inject `PRECACHE_ASSETS` into `dist/sw.js` (and write `dist/precache.json`), ensuring all bundle JS, CSS, fonts, workers and WASM are precached on service worker install. |
-| E. Tests and CI | **Done** | 20 unit tests import the real modules. Smoke test (jsdom, production bundler, strict mode) runs 12 checks and verifies zero unstyled DOM classes. Screenshot tests (`tests/screenshots.mjs`) capture 4 viewports (320 / 390 / 560 / 1024 px) via Edge/Chromium headless and assert non-empty PNGs. Fixed Node 22.14 / undici 8.12.3 compatibility in `tests/smoke.mjs`. `ci.yml` updated with `npm run screenshots` and `v2` branch. |
-| F. CSP, docs, release | **Done** | Enforced CSP in `_headers` (removed CDN origins and script unsafe-inline); updated README, release history, and bumped `VERSION` in `public/sw.js` and `index.html` to `v2.0.0`; created `v2.0.0` release tag. |
+| A. Foundation: Vite, compiled Tailwind, PostCSS, Prettier | **Done** | Custom theme tokens (zinc + apple palettes); CSS layers preserved. Upgraded to Tailwind v4 & Vite 8 with `@tailwindcss/postcss`. |
+| B. Split the code into modules | **Done** | 18 modules in `src/`. All `steps` arrays converted into explicit `init()` functions; `main.js` calls them in sequence. |
+| C. Own the dependencies | **Done** | JSZip, Font Awesome (solid + regular), and Plus Jakarta Sans bundled. Only `.woff2` fonts emitted (>500 KB saved). |
+| D. Workers and service worker | **Done** | Dedicated worker files (`thumbnail.worker.js`, `library.worker.js`, `rar.worker.js`). Build-time SW precache generation. |
+| E. Tests and CI | **Done** | 20 unit tests, 12-check strict smoke test (jsdom), 4-viewport headless screenshot checks, GitHub Actions CI workflow. |
+| F. CSP, docs, release | **Done** | Enforced CSP in `_headers`; updated README, release history, and bumped `VERSION` in `sw.js` and `index.html` to `v2.0.0`. |
 
-## Modules
+---
+
+## v2.5 Multi-Tier Storage Engine (In Progress on branch `2.5`)
+
+Goal: Replace `localStorage` string serialization for reading history and bookmarks with an IndexedDB storage engine while preserving zero-latency synchronous UI lookups.
+
+| Milestone | Status | Notes |
+|---|---|---|
+| 1. Database Schema Upgrade | **Done** | Upgraded `'komik'` database from v1 (`covers`) to v2 (`covers`, `history`, `bookmarks`). |
+| 2. Storage Engine (`src/storage.js`) | **Done** | Async CRUD helpers (`dbGet`, `dbPut`, `dbDelete`, `dbGetAll`, `dbClear`) combined with in-memory sync cache for instant UI reads. |
+| 3. Automatic Migration | **Done** | Transparent one-time import from existing `localStorage` (`comic_reader_history` and `comic_reader_bookmarks`) into IndexedDB. |
+| 4. Reading History Wiring (`src/progress.js`) | **Done** | `saveProgressNow()` and `readHistory()` persist to IndexedDB through the storage engine; `migrateLegacyKeys()` updated. |
+| 5. Bookmarks Wiring (`src/bookmarks.js`) | **Done** | `loadBookmarksFromStorage()` and `saveBookmarksToStorage()` wired to IndexedDB cache & persistence. |
+| 6. Shelf & Backup Wiring (`src/shelf.js`) | **Done** | `idb` wrapper uses `dbGet`/`dbPut`; `exportBackup()` and `importBackup()` operate on the new engine; `clearHistoryBtn` purges IndexedDB. |
+| 7. Main Lifecycle Wiring (`src/main.js`) | **Done** | `initStorageEngine()` runs after DOM ready, refreshing shelf cards once IndexedDB hydration finishes. |
+| 8. Full Test Verification | **Done** | 20 unit tests, 12 smoke checks, and 4 headless screenshot viewports passing. |
+
+---
+
+## Modules Overview
 
 | Module | Purpose |
 |---|---|
-| `main.js` | Imports the styles and every module, then calls each `initXxx()` function in the correct order. |
-| `state.js`, `dom.js` | Shared state and settings (no DOM), and the element lookups. |
-| `pure.js`, `paging.js` | Pure helpers and paging rules. These are what the unit tests import. |
-| `theme.js`, `ui.js`, `settingsui.js` | Appearance, shared interface helpers and dialogs, Settings. |
-| `files.js`, `pages.js`, `epub.js` | Opening files and archives, on-demand page decoding and thumbnails, EPUB export. |
-| `reader.js`, `curl.js`, `guided.js` | Rendering, navigation and zoom; page curl and swipe; Guided View. |
-| `progress.js`, `bookmarks.js`, `shelf.js`, `library.js` | Progress, bookmarks, Shelf, and books kept on the device. |
-| `pwa.js` | Install, service worker, offline status, wake lock, diagnostics. |
+| `main.js` | Imports styles and modules; initializes storage engine and calls `initXxx()` functions in order. |
+| `storage.js` | IndexedDB multi-tier storage engine with synchronous in-memory cache and automatic migration. |
+| `state.js`, `dom.js` | Shared state, settings (no DOM), and element lookups. |
+| `pure.js`, `paging.js` | Pure helpers and paging rules (unit tested). |
+| `theme.js`, `ui.js`, `settingsui.js` | Appearance, shared interface helpers, dialogs, and Settings. |
+| `files.js`, `pages.js`, `epub.js` | Opening files and archives, on-demand page decoding, EPUB export. |
+| `reader.js`, `curl.js`, `guided.js` | Rendering, navigation, zoom, page curl, swipe, and Guided View. |
+| `progress.js`, `bookmarks.js`, `shelf.js`, `library.js` | Progress, bookmarks, Shelf, and on-device OPFS books. |
+| `pwa.js` | Install prompt, service worker, offline status, wake lock, diagnostics. |
+| `workers/` | Dedicated workers: `thumbnail.worker.js`, `library.worker.js`, `rar.worker.js`. |
 
-## Findings so far
-- Three old bugs found by the compiled-CSS check: two invalid Tailwind classes (`py-0.2`, `sm:w-88`; no visual change when removed) and `fa-sparkles` (Pro-only icon, so the Try Sample button never had an icon). The last one now uses `fa-wand-magic-sparkles`.
-- Plus Jakarta Sans stops at weight 800, so `font-black` (900) was already rendered as 800 before.
-- Dropped unused `.ttf` and `.woff` fallbacks: shaved >500 KB from `dist/assets/`, leaving only modern `.woff2` font files.
-- Replaced Blob-URL workers with native modules in `src/workers/` (`thumbnail.worker.js`, `library.worker.js`, `rar.worker.js`), which clean up CSP rules.
-- Service worker precaching is automated at build time via `generate-precache` in `vite.config.js`, injecting all hashed assets directly into `dist/sw.js`.
-- Fixed Node 22.14 / undici 8.12.3 `zlib` decompress compatibility in `tests/smoke.mjs`.
-- During Area B refactor: `initThemeModule()` called `initTheme()` → `applyTheme()` before `systemDarkModeQuery` was assigned — order bug surfaced immediately in smoke tests, fixed by assigning the media query first.
-- Migrated to Tailwind CSS v4 & Vite v8 using `@tailwindcss/postcss`, `@config` and `@source` directives in `src/style.css`, and `import.meta.dirname` in `vite.config.js`. Verified zero unstyled classes in live DOM.
-- Production bundle: JS ~190 KB (59 KB gzip), CSS ~102 KB (25 KB gzip), plus the lazy RAR chunk and compact `.woff2` fonts.
-- The sandbox used for development resets between sessions; keep the project in Git and re-run `npm ci`.
+---
+
+## Findings & Key Decisions
+- **Tailwind v4 & Vite v8:** Seamlessly upgraded using `@tailwindcss/postcss`, linking the existing theme config via `@config "../tailwind.config.js"` and `@source` directives in `src/style.css`.
+- **Multi-Tier Storage Architecture:** `localStorage` is kept only for synchronous boot settings (theme, low-power toggle, hints) to eliminate visual flicker. High-volume reading history and bookmarks are moved to IndexedDB to remove the 5 MB quota ceiling.
+- **Synchronous Cache Strategy:** UI rendering remains 100% synchronous by bootstrapping from an in-memory cache, while persistence occurs asynchronously in IndexedDB.
+- **Workers & CSP:** Native module workers replace Blob-URLs, permitting a strict CSP with `worker-src 'self'`.
+
+---
 
 ## Commands
 ```bash
@@ -45,8 +67,7 @@ npm install
 npm run dev         # local server with hot reload
 npm run build       # production build in dist/
 npm test            # unit and release-consistency tests (no build needed)
-npm run smoke       # boots the app in jsdom; run after a build to also check class coverage
-npm run screenshots # headless screenshot checks at 4 viewports (needs dist/)
-npm run format      # Prettier
+npm run smoke       # boots the app in jsdom; run after a build to verify DOM & CSS rules
+npm run screenshots # headless screenshot checks at 320/390/560/1024 px (needs dist/)
+npm run format      # Prettier code formatting
 ```
-

@@ -3,8 +3,8 @@
 **Project:** KomiK Reader (Ultra-Sleek CBZ & CBR Comic Reader)
 **Target Platform:** Web browsers (Desktop, iOS Safari PWA, Android Chrome)
 **Architecture:** 100% client-side, zero-backend, single `index.html`
-**Current Production Version:** `v1.9.5` — Polish & Verify
-**Document owner:** Product Owner / Technical Architect · **Last updated:** 2026-10-16
+**Current Production Version:** `v2.0.0` — Vite Build & Self-Hosted (`v2.5` in development)
+**Document owner:** Product Owner / Technical Architect · **Last updated:** 2026-10-20
 
 ---
 
@@ -150,14 +150,28 @@ reflection     = matrix(1−2nx², −2nxny, −2nxny, 1−2ny², 2(M·n)nx, 2(M
 * Pure functions (unit tested): `filterShelf` (token search over file name, series, `#issue`, plus the device filter), `findNextVolume` (same series ignoring case, smallest higher numeric issue, must be in the library), `libraryRows` (sort by size or by last read with never-read first), together with `groupShelf` from v1.9.0.
 * `logIssue` keeps the last 20 events (`error`, `unhandledrejection`, `securitypolicyviolation`, library and service worker failures). `copyDiagnostics` reads storage, service worker and cache state at the moment of the request; it never includes book names or file contents.
 
+### 3.13 Multi-Tier Storage Engine & IndexedDB Migration (v2.5)
+* **Architecture:** Replaces monolithic `localStorage` string serialization for reading progress and bookmarks with a unified `src/storage.js` engine.
+* **Schema Upgrade (`komik` database v2):** Retains existing `'covers'` object store (Blobs) and adds `'history'` (reading position, timestamps, series metadata) and `'bookmarks'` (page index arrays).
+* **Synchronous in-memory cache:** Bootstraps synchronously from cache and hydrates asynchronously from IndexedDB, preserving instant synchronous lookups (`readHistory()`, `isCurrentPageBookmarked()`) with zero UI rendering delay.
+* **Automatic One-Time Migration:** On first launch, existing `comic_reader_history` and `comic_reader_bookmarks` keys in `localStorage` are automatically migrated into IndexedDB.
+* **Capacity & Performance:** Eliminates the 5 MB browser storage ceiling and avoids main-thread JSON serialization hiccups when reading hundreds of comic issues.
+
 ---
 
 ## 4. Release History
 
 > Versions `v1.3.6`, `v1.4.3`, `v1.5.x` and `v1.9.1`-`v1.9.4` were never released (the small release after v1.9.0 was numbered `v1.9.5`). The planned scope of the old v1.4.1, v1.5.0 and v1.6.0 was merged into `v1.6.0`.
 
-### 🏗️ `v2.0.0` — Vite Build & Self-Hosted *(Current)*
-* **Vite 5 build:** Tailwind CSS compiled at build time (no Play CDN), PostCSS, Prettier, `vite.config.js` with custom plugins.
+### 🗄️ `v2.5.0` — Multi-Tier Storage Engine *(In development)*
+* **IndexedDB storage layer:** Reading history and bookmarks migrated from `localStorage` to dedicated object stores in IndexedDB (`komik` v2 schema).
+* **Dual-tier cache:** Synchronous in-memory reads for uninterrupted, flicker-free UI rendering combined with non-blocking asynchronous IndexedDB writes.
+* **Seamless migration:** Existing user progress and bookmarks in `localStorage` are automatically transferred into IndexedDB on first launch without data loss.
+* **Shelf & Backup Integration:** Backup JSON export and import round-trip directly through the new storage engine; clearing history purges records from IndexedDB.
+* **Test validation:** 20 unit tests, 12-check strict smoke test, and 4-viewport screenshot tests pass without errors.
+
+### 🏗️ `v2.0.0` — Vite Build & Self-Hosted *(Current Production)*
+* **Vite 5/8 build:** Tailwind CSS compiled at build time (no Play CDN), PostCSS, Prettier, `vite.config.js` with custom plugins.
 * **All dependencies self-hosted:** Font Awesome (solid + regular), Plus Jakarta Sans, and JSZip bundled — zero third-party network requests after first install.
 * **Module workers:** thumbnail, library and RAR extraction each run in a proper `Worker` (module URL), replacing the old Blob-URL approach; CSP `worker-src 'self'` now works without `blob:`.
 * **Automated SW precaching:** `generate-precache` Vite plugin injects all hashed `dist/assets/` filenames into `dist/sw.js` and writes `dist/precache.json` at build time.
@@ -308,9 +322,9 @@ Each candidate scored 1–5 on **Reach**, **Impact** and **Confidence**, divided
 ## 7. Roadmap (re-sequenced)
 
 ```
-v1.7.x ✔ ──> v1.8.0 ✔ ──────> v1.9.0 ─────────> v2.0.0 ───────> v2.1.0 ───────> v2.2.0+
-Press Green   Guided View       Library &         Modernise       Remote Library   AI Reader
-& Comfort     & Polish          Install (PWA)     (Vite, tests)
+v1.9.5 ✔ ──> v2.0.0 ✔ ──────> v2.5.0 (WIP) ────> v2.6.0 ───────> v2.7.0+
+Polish       Modernise         IndexedDB         Remote          Next-Gen
+& Verify     (Vite, tests)     Storage Engine    Library         AI Reader
 ```
 
 > **Decision (2026-10-08):** the site is hosted over HTTPS on Cloudflare, so HTTPS-only items no longer wait for v2.0.0. Wake Lock and storage persistence shipped in v1.8.0; install-as-app, service worker and OPFS archive storage move to v1.9.0; the build-tool modernisation stays in v2.0.0.
@@ -338,25 +352,24 @@ Small release between v1.9.0 and v2.0.0: next-volume offer, Shelf search and fil
 5. Low-storage behaviour: the "not enough space" message appears and nothing is half-written.
 6. Series grouping with a real set of volumes that have `ComicInfo.xml`.
 
-**Open items carried forward:**
-* Enforce the Content-Security-Policy: use Settings → Diagnostics (policy report count) on the live site; when it stays at 0 across the main flows (open book, install, offline, library save, update banner), rename `Content-Security-Policy-Report-Only` to `Content-Security-Policy` in `_headers`.
-* ~~In-app free-up-space list~~ shipped in v1.9.5.
-* The persistent-storage prompt behaves differently across browsers; verify what Safari and Firefox grant.
+### ✅ `v2.0.0` — Modernise *(shipped, see release history)*
+* Vite 8 + Tailwind CSS v4 + 18 modular ESM files.
+* Self-hosted Plus Jakarta Sans, Font Awesome, and JSZip; zero external network requests after installation.
+* Native module Web Workers (`thumbnail`, `library`, `rar`).
+* Enforced Content Security Policy (`script-src 'self' 'wasm-unsafe-eval'`).
+* Automated test matrix: 20 unit tests, 12 smoke checks, 4 responsive headless screenshot viewports.
 
-### 🌐 `v2.0.0` — Modernise (major)
-**Status (day 2):** Vite project with compiled Tailwind and bundled dependencies; code split into 18 modules with the start-up order preserved; 20 unit tests (importing the real modules) and a 12-check jsdom smoke test on the production bundler passing; CI workflow written. See `docs/v2-progress.md` for the area-by-area status.
+### 🗄️ `v2.5.0` — Multi-Tier Storage Engine *(In development)*
+* **IndexedDB migration:** Moves reading history and bookmarks out of `localStorage` into IndexedDB (`komik` v2 database with `covers`, `history`, `bookmarks` stores).
+* **Sync in-memory cache:** Zero-latency reads for all UI operations with debounced async persistence to IndexedDB.
+* **Automatic migration:** Backwards-compatible one-time import from existing `localStorage` keys on first launch.
+* **Backup export/import:** Full fidelity JSON backups powered directly by the storage layer.
 
-**Goal:** a maintainable codebase with a clean offline story.
-* Vite + modules + compiled Tailwind (B-15); self-hosted JSZip, FontAwesome and fonts, with SRI where applicable (B-03, B-04 SRI).
-* Automated checks in CI: unit tests (already started in v1.8.0), screenshot checks at 320 / 390 / 560 / 1024+ px.
-* Keep an optional single-file build for people who cannot host.
-* **Metrics:** cold launch offline < 2 s; build and test run in under 2 minutes.
-
-### ☁️ `v2.1.0` — Remote Library (OPDS & WebDAV)
+### ☁️ `v2.6.0` — Remote Library (OPDS & WebDAV)
 * OPDS feeds (Komga, Kavita, Suwayomi), WebDAV browsing, chapter pre-fetch and cache.
 * Needs HTTPS and CORS guidance; credentials stay on the device.
 
-### 🧠 `v2.2.0+` — Next-Gen AI Reader
+### 🧠 `v2.7.0+` — Next-Gen AI Reader
 * WebAssembly upscaling, speech-bubble OCR + translation overlay, text-to-speech.
 * Optional and on-device only; no cloud inference by default.
 
