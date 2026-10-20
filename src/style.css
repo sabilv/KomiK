@@ -1,5 +1,7 @@
-@tailwind base;
-@tailwind components;
+@import "tailwindcss";
+@config "../tailwind.config.js";
+@source "../index.html";
+@source "../src/**/*.js";
 
         ::-webkit-scrollbar {
             width: 6px;
@@ -171,4 +173,3 @@
         }
     
 
-@tailwind utilities;

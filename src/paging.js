@@ -35,5 +35,3 @@ export function getPrevIndex() {
   if (appState.viewMode === 'double' && cur - 2 >= (settings.coverAlone ? 1 : 0) && !wide(cur - 1) && !wide(cur - 2)) return cur - 2;
   return cur - 1;
 }
-
-

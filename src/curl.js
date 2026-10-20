@@ -445,4 +445,3 @@ export function initCurl() {
     viewportContainer.addEventListener('pointercancel', endPointer);
   }
 }
-

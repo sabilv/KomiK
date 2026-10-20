@@ -230,5 +230,3 @@ export function parseComicInfo(xml) {
     return null;
   }
 }
-
-

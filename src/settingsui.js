@@ -283,4 +283,3 @@ export function initSettingsUI() {
 
   applySettings();
 }
-

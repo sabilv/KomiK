@@ -202,5 +202,3 @@ export function thumbInWorker(blob) {
     thumbWorker.postMessage({ id, blob });
   });
 }
-
-

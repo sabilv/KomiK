@@ -335,8 +335,7 @@ export function initFiles() {
   if (demoComicBtn) demoComicBtn.addEventListener('click', () => generateDemoComic());
 
   dropOverlay = document.createElement('div');
-  dropOverlay.className =
-    'fixed inset-0 z-[90] hidden items-center justify-center bg-zinc-950/70 backdrop-blur-sm pointer-events-none';
+  dropOverlay.className = 'fixed inset-0 z-[90] hidden items-center justify-center bg-zinc-950/70 backdrop-blur-sm pointer-events-none';
   dropOverlay.innerHTML =
     '<div class="glass-card rounded-3xl px-8 py-6 text-sm font-bold flex items-center space-x-3 border-2 border-dashed border-apple-blue"><i class="fa-solid fa-file-arrow-down text-apple-blue text-xl"></i><span>Drop to open comic</span></div>';
   document.body.appendChild(dropOverlay);
@@ -375,4 +374,3 @@ export function initFiles() {
     });
   }
 }
-

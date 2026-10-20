@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import { readdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
+const __dirname = import.meta.dirname;
 
 function dropLegacyFonts() {
   return {

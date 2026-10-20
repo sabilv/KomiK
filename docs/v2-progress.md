@@ -12,7 +12,7 @@ Last updated: day 3.
 | C. Own the dependencies | **Done** | JSZip, Font Awesome (solid + regular) and Plus Jakarta Sans are bundled; no request goes to a third party. The RAR extractor is a lazy chunk, loaded only when a `.cbr` is opened. Unused `.ttf` / `.woff` legacy font fallbacks dropped via `dropLegacyFonts` plugin in `vite.config.js`; only `.woff2` files are emitted into `dist/`, trimming >500 KB from output assets. |
 | D. Workers and service worker | **Done** | Replaced the three Blob-URL workers with dedicated worker files in `src/workers/` (`thumbnail.worker.js`, `library.worker.js`, `rar.worker.js`). Added `generate-precache` plugin in `vite.config.js` to automatically extract all emitted assets from `dist/assets/` and inject `PRECACHE_ASSETS` into `dist/sw.js` (and write `dist/precache.json`), ensuring all bundle JS, CSS, fonts, workers and WASM are precached on service worker install. |
 | E. Tests and CI | **Done** | 20 unit tests import the real modules. Smoke test (jsdom, production bundler, strict mode) runs 12 checks and verifies zero unstyled DOM classes. Screenshot tests (`tests/screenshots.mjs`) capture 4 viewports (320 / 390 / 560 / 1024 px) via Edge/Chromium headless and assert non-empty PNGs. Fixed Node 22.14 / undici 8.12.3 compatibility in `tests/smoke.mjs`. `ci.yml` updated with `npm run screenshots` and `v2` branch. |
-| F. CSP, docs, release | Not started | Enforce CSP after the Diagnostics count is 0 (and remove the inline `style` attributes that still need `style-src 'unsafe-inline'`); update README, release history, `VERSION` in `public/sw.js`; tag and deploy. |
+| F. CSP, docs, release | **Done** | Enforced CSP in `_headers` (removed CDN origins and script unsafe-inline); updated README, release history, and bumped `VERSION` in `public/sw.js` and `index.html` to `v2.0.0`; created `v2.0.0` release tag. |
 
 ## Modules
 
@@ -35,7 +35,8 @@ Last updated: day 3.
 - Service worker precaching is automated at build time via `generate-precache` in `vite.config.js`, injecting all hashed assets directly into `dist/sw.js`.
 - Fixed Node 22.14 / undici 8.12.3 `zlib` decompress compatibility in `tests/smoke.mjs`.
 - During Area B refactor: `initThemeModule()` called `initTheme()` → `applyTheme()` before `systemDarkModeQuery` was assigned — order bug surfaced immediately in smoke tests, fixed by assigning the media query first.
-- Production bundle: JS ~191 KB (61 KB gzip), CSS ~84 KB (24 KB gzip), plus the lazy RAR chunk and compact `.woff2` fonts.
+- Migrated to Tailwind CSS v4 & Vite v8 using `@tailwindcss/postcss`, `@config` and `@source` directives in `src/style.css`, and `import.meta.dirname` in `vite.config.js`. Verified zero unstyled classes in live DOM.
+- Production bundle: JS ~190 KB (59 KB gzip), CSS ~102 KB (25 KB gzip), plus the lazy RAR chunk and compact `.woff2` fonts.
 - The sandbox used for development resets between sessions; keep the project in Git and re-run `npm ci`.
 
 ## Commands

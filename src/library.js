@@ -263,4 +263,3 @@ export function initLibrary() {
     if (e.key === 'Escape') closeLibraryManager();
   });
 }
-

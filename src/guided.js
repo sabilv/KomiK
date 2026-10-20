@@ -175,4 +175,3 @@ export function initGuided() {
     menuGuidedBtn.addEventListener('click', () => setGuided(!appState.guided));
   }
 }
-

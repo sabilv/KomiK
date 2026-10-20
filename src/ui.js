@@ -241,4 +241,3 @@ export function initUI() {
     else if (e.key === '?') openHelp();
   });
 }
-
