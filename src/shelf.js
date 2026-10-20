@@ -16,6 +16,7 @@ import { readHistory } from './progress.js';
 import { escapeHtml, filterShelf, findNextVolume, groupShelf } from './pure.js';
 import { goToPage } from './reader.js';
 import { appState, settings } from './state.js';
+import { clearHistoryAll, dbGet, dbPut, getBookmarksCache, replaceBookmarksAll, replaceHistoryAll } from './storage.js';
 import { keys, showToast, toggleDrawer, triggerFilePicker } from './ui.js';
 
 export function renderRecentsList() {
@@ -98,33 +99,11 @@ export async function openFromShelf(item, key) {
 }
 
 export const idb = {
-  db: null,
-  open() {
-    if (!this.db)
-      this.db = new Promise((res, rej) => {
-        const r = indexedDB.open('komik', 1);
-        r.onupgradeneeded = () => r.result.createObjectStore('covers');
-        r.onsuccess = () => res(r.result);
-        r.onerror = () => rej(r.error);
-      });
-    return this.db;
-  },
   async get(k) {
-    const db = await this.open();
-    return new Promise((res) => {
-      const q = db.transaction('covers').objectStore('covers').get(k);
-      q.onsuccess = () => res(q.result || null);
-      q.onerror = () => res(null);
-    });
+    return dbGet('covers', k);
   },
   async put(k, v) {
-    const db = await this.open();
-    return new Promise((res) => {
-      const t = db.transaction('covers', 'readwrite');
-      t.objectStore('covers').put(v, k);
-      t.oncomplete = () => res(true);
-      t.onerror = () => res(false);
-    });
+    return dbPut('covers', k, v);
   }
 };
 
@@ -176,10 +155,7 @@ export async function renderContinueCard() {
 }
 
 export function exportBackup() {
-  let bm = {};
-  try {
-    bm = JSON.parse(localStorage.getItem('comic_reader_bookmarks') || '{}');
-  } catch (e) {}
+  const bm = getBookmarksCache();
   const blob = new Blob(
     [JSON.stringify({ app: 'KomiK', version: 1, exportedAt: new Date().toISOString(), history: readHistory(), bookmarks: bm })],
     { type: 'application/json' }
@@ -201,10 +177,7 @@ export async function importBackup(file) {
     if (!d || d.app !== 'KomiK' || typeof d.history !== 'object') throw new Error('Not a KomiK backup');
     const bad = (k) => ['__proto__', 'constructor', 'prototype'].includes(k);
     const h = readHistory();
-    let bm = {};
-    try {
-      bm = JSON.parse(localStorage.getItem('comic_reader_bookmarks') || '{}');
-    } catch (e) {}
+    const bm = getBookmarksCache();
     let count = 0;
     for (const [k, v] of Object.entries(d.history)) {
       if (
@@ -234,8 +207,8 @@ export async function importBackup(file) {
       if (bad(k) || !Array.isArray(list)) continue;
       bm[k] = Array.from(new Set([...(bm[k] || []), ...list.filter(Number.isInteger)])).sort((a, b) => a - b);
     }
-    localStorage.setItem('comic_reader_history', JSON.stringify(h));
-    localStorage.setItem('comic_reader_bookmarks', JSON.stringify(bm));
+    await replaceHistoryAll(h);
+    await replaceBookmarksAll(bm);
     loadBookmarksFromStorage();
     renderRecentsList();
     renderContinueCard();
@@ -296,8 +269,8 @@ export let shelfTimer = 0;
 /** Initialize shelf tabs, search, filters, and continue reading card. */
 export function initShelf() {
   if (clearHistoryBtn) {
-    clearHistoryBtn.addEventListener('click', () => {
-      localStorage.removeItem('comic_reader_history');
+    clearHistoryBtn.addEventListener('click', async () => {
+      await clearHistoryAll();
       renderRecentsList();
       showToast('History cleared');
     });

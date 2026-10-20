@@ -4,6 +4,7 @@ import { readingEstimateBottom, readingEstimateDivider, readingTimeTop, recentsV
 import { goToPage } from './reader.js';
 import { renderRecentsList } from './shelf.js';
 import { appState } from './state.js';
+import { deleteHistoryItem, getHistoryCache, setHistoryItem } from './storage.js';
 import { showToast } from './ui.js';
 
 export function getBookKey(fileName = appState.fileName, totalPages = appState.pages.length) {
@@ -19,9 +20,9 @@ export function saveProgressNow() {
   if (!key) return;
 
   try {
-    const history = JSON.parse(localStorage.getItem('comic_reader_history') || '{}');
+    const history = getHistoryCache();
     const prev = history[key] || {};
-    history[key] = {
+    const record = {
       fileName: appState.fileName,
       currentIndex: appState.currentIndex,
       totalPages: appState.pages.length,
@@ -34,19 +35,19 @@ export function saveProgressNow() {
       lastRead: new Date().toISOString()
     };
 
-    localStorage.setItem('comic_reader_history', JSON.stringify(history));
+    setHistoryItem(key, record);
 
     if (!recentsView.classList.contains('hidden')) {
       renderRecentsList();
     }
   } catch (err) {
-    console.warn('LocalStorage save warning:', err);
+    console.warn('History save warning:', err);
   }
 }
 
 export function restoreProgress(fileName) {
   const key = getBookKey(fileName, appState.pages.length);
-  const history = JSON.parse(localStorage.getItem('comic_reader_history') || '{}');
+  const history = readHistory();
   const saved = history[key] || history[`${fileName}__${appState.pages.length}`] || history[fileName];
 
   if (saved && saved.currentIndex > 0 && saved.currentIndex < appState.pages.length) {
@@ -96,11 +97,7 @@ export function updateReadingEstimator() {
 }
 
 export function readHistory() {
-  try {
-    return JSON.parse(localStorage.getItem('comic_reader_history') || '{}');
-  } catch (e) {
-    return {};
-  }
+  return getHistoryCache();
 }
 
 export let saveT = 0;
@@ -117,9 +114,8 @@ export function migrateLegacyKeys(totalPages) {
   try {
     const h = readHistory();
     if (h[legacy] && !h[id]) {
-      h[id] = h[legacy];
-      delete h[legacy];
-      localStorage.setItem('comic_reader_history', JSON.stringify(h));
+      setHistoryItem(id, h[legacy]);
+      deleteHistoryItem(legacy);
     }
     if (appState.bookmarks[legacy] && !appState.bookmarks[id]) {
       appState.bookmarks[id] = appState.bookmarks[legacy];

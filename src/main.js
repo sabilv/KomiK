@@ -10,6 +10,9 @@ import '@fortawesome/fontawesome-free/css/regular.min.css';
 import './style.css';
 
 import { initDOM } from './dom.js';
+import { updateBookmarkButton } from './bookmarks.js';
+import { renderContinueCard, renderRecentsList } from './shelf.js';
+import { initStorageEngine } from './storage.js';
 import { initThemeModule } from './theme.js';
 import { initUI } from './ui.js';
 import { initFiles } from './files.js';
@@ -27,6 +30,11 @@ import { initState } from './state.js';
 
 // Initialize modules in the same order as the original monolithic script.
 initDOM();
+initStorageEngine(() => {
+  renderRecentsList();
+  renderContinueCard();
+  updateBookmarkButton();
+});
 initThemeModule();
 initUI();
 initFiles();

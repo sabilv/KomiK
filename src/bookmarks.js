@@ -17,19 +17,16 @@ import { getBookKey } from './progress.js';
 import { escapeHtml } from './pure.js';
 import { goToPage } from './reader.js';
 import { appState } from './state.js';
+import { getBookmarksCache, replaceBookmarksAll } from './storage.js';
 import { showToast, toggleDrawer } from './ui.js';
 
 export function loadBookmarksFromStorage() {
-  try {
-    appState.bookmarks = JSON.parse(localStorage.getItem('comic_reader_bookmarks') || '{}');
-  } catch (e) {
-    appState.bookmarks = {};
-  }
+  appState.bookmarks = getBookmarksCache();
 }
 
 export function saveBookmarksToStorage() {
   try {
-    localStorage.setItem('comic_reader_bookmarks', JSON.stringify(appState.bookmarks));
+    replaceBookmarksAll(appState.bookmarks);
   } catch (e) {
     console.warn('Bookmark storage warning:', e);
   }
